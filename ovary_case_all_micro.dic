@@ -1,0 +1,300 @@
+[System]
+Output filename=C:\Users\s182997\OneDrive - University of Texas Southwestern\ovary_case_all_micro.txt
+Matrix filename=O:\OBGYN\GynOnc\Fellows\Kremer\Early Ovary SEER Study\Stage 1 Ovary Treatment Case Listing (All Years) Micro Confirmed.slm
+Database name=Incidence - SEER 18 Regs Custom Data (with additional treatment fields), Nov 2018 Sub (2000-2016) <Katrina/Rita Population Adjustment> - Linked To County Attributes - Total U.S., 1969-2017 Counties
+Title1=Stage 1 Ovary Treatment Case Listing (All Years) Microscopically confirmed
+
+[Session Options]
+Type=Survival
+
+[Export Options]
+GZipped=false
+Variable format=labels
+File format=DOS/Windows
+Field delimiter=tab
+Missing character=space
+Fields with delimiter in quotes=true
+Remove thousands separators=false
+Variable names included=false
+Column Variables as Stats=false
+
+[Variables]
+Var1Name=Race and origin recode (NHW, NHB, NHAIAN, NHAPI, Hispanic)
+Var1DisplayType=Unformatted
+Var2Name=Histologic Type ICD-O-3
+Var2DisplayType=Unformatted
+Var3Name=Laterality
+Var3DisplayType=Unformatted
+Var4Name=Grade
+Var4DisplayType=Unformatted
+Var5Name=Derived AJCC T, 6th ed (2004-2015)
+Var5DisplayType=Unformatted
+Var6Name=Derived AJCC N, 6th ed (2004-2015)
+Var6DisplayType=Unformatted
+Var7Name=Derived AJCC M, 6th ed (2004-2015)
+Var7DisplayType=Unformatted
+Var8Name=Regional nodes examined (1988+)
+Var8DisplayType=Unformatted
+Var9Name=Regional nodes positive (1988+)
+Var9DisplayType=Unformatted
+Var10Name=Chemotherapy recode (yes, no/unk)
+Var10DisplayType=Unformatted
+Var11Name=Year of diagnosis
+Var11DisplayType=Unformatted
+Var12Name=Survival months
+Var12DisplayType=Unformatted
+Var13Name=SEER cause-specific death classification
+Var13DisplayType=Unformatted
+Var14Name=Age at diagnosis
+Var14DisplayType=Unformatted
+Var15Name=Sex
+Var15DisplayType=Unformatted
+Var16Name=State
+Var16DisplayType=Unformatted
+Var17Name=County
+Var17DisplayType=Unformatted
+Var18Name=Vital status recode (study cutoff used)
+Var18DisplayType=Unformatted
+Var19Name=Month of diagnosis recode
+Var19DisplayType=Unformatted
+Var20Name=Month of follow-up recode
+Var20DisplayType=Unformatted
+Var21Name=Year of follow-up recode
+Var21DisplayType=Unformatted
+Var22Name=End Calc Vital Status (Adjusted)
+Var22DisplayType=Unformatted
+Var23Name=Begin Calc Age (Adjusted)
+Var23DisplayType=Unformatted
+Var24Name=Number of Intervals (Calculated)
+Var24DisplayType=Unformatted
+
+[Format=Race and origin recode (NHW, NHB, NHAIAN, NHAPI, Hispanic)]
+1=Non-Hispanic White
+2=Non-Hispanic Black
+3=Non-Hispanic American Indian/Alaska Native
+4=Non-Hispanic Asian or Pacific Islander
+5=Hispanic (All Races)
+9=Non-Hispanic Unknown Race
+
+[Format=Histologic Type ICD-O-3]
+0-1992=* 8000-9992  Unformatted value +8000.
+
+[Format=Laterality]
+0=Not a paired  site
+1=Right - origin of primary
+2=Left - origin of primary
+3=Only one side - side unspecified
+4=Bilateral, single primary
+5=Paired site: midline tumor
+9=Paired site, but no information concerning laterality
+
+[Format=Grade]
+1=Well differentiated; Grade I
+2=Moderately differentiated; Grade II
+3=Poorly differentiated; Grade III
+4=Undifferentiated; anaplastic; Grade IV
+5=T-cell
+6=B-cell; pre-B; B-precursor
+7=Null cell; non T-non B
+8=NK cell; natural killer cell (1995+)
+9=Unknown
+
+[Format=Derived AJCC T, 6th ed (2004-2015)]
+0=T0
+1=Ta
+5=Tis
+6=Tispu
+7=Tispd
+10=T1
+11=T1mic
+12=T1a
+13=T1a1
+14=T1a2
+15=T1b
+16=T1b1
+17=T1b2
+18=T1c
+19=T1NOS
+20=T2
+21=T2a
+22=T2b
+23=T2c
+29=T2NOS
+30=T3
+31=T3a
+32=T3b
+33=T3c
+39=T3NOS
+40=T4
+41=T4a
+42=T4b
+43=T4c
+44=T4d
+49=T4NOS
+80=T1aNOS
+81=T1bNOS
+88=NA
+99=TX
+126=Blank(s)
+
+[Format=Derived AJCC N, 6th ed (2004-2015)]
+0=N0
+1=N0(i-)
+2=N0(i+)
+3=N0(mol-)
+4=N0(mol+)
+10=N1
+11=N1a
+12=N1b
+13=N1c
+18=N1mi
+19=N1NOS
+20=N2
+21=N2a
+22=N2b
+23=N2c
+29=N2NOS
+30=N3
+31=N3a
+32=N3b
+33=N3c
+39=N3NOS
+88=NA
+99=NX
+126=Blank(s)
+
+[Format=Derived AJCC M, 6th ed (2004-2015)]
+0=M0
+10=M1
+11=M1a
+12=M1b
+13=M1c
+19=M1NOS
+88=NA
+99=MX
+126=Blank(s)
+
+[Format=Regional nodes examined (1988+)]
+0-99=* 00-99
+
+[Format=Regional nodes positive (1988+)]
+0-99=* 00-99
+
+[Format=Chemotherapy recode (yes, no/unk)]
+0=No/Unknown
+1=Yes
+
+[Format=Year of diagnosis]
+200=2000
+201=2001
+202=2002
+203=2003
+204=2004
+205=2005
+206=2006
+207=2007
+208=2008
+209=2009
+210=2010
+211=2011
+212=2012
+213=2013
+214=2014
+215=2015
+216=2016
+
+[Format=Survival months]
+0-203=* 0000-0203
+9999=Unknown
+
+[Format=SEER cause-specific death classification]
+0=Alive or dead of other cause
+1=Dead (attributable to this cancer dx)
+8=Dead (missing/unknown COD)
+9=N/A not first tumor
+
+[Format=Age at diagnosis]
+0-120=* 000-120
+253=Unknown
+
+[Format=Sex]
+1=Male
+2=Female
+
+[Format=State]
+2=Alaska
+6=California
+9=Connecticut
+13=Georgia
+15=Hawaii
+19=Iowa
+21=Kentucky
+22=Louisiana
+26=Michigan
+34=New Jersey
+35=New Mexico
+49=Utah
+53=Washington
+
+[Format=County]
+1-999=* 001-999
+
+[Format=Vital status recode (study cutoff used)]
+1=Alive
+0=Dead
+
+[Format=Month of diagnosis recode]
+1=January
+2=February
+3=March
+4=April
+5=May
+6=June
+7=July
+8=August
+9=September
+10=October
+11=November
+12=December
+
+[Format=Month of follow-up recode]
+1=January
+2=February
+3=March
+4=April
+5=May
+6=June
+7=July
+8=August
+9=September
+10=October
+11=November
+12=December
+
+[Format=Year of follow-up recode]
+200=2000
+201=2001
+202=2002
+203=2003
+204=2004
+205=2005
+206=2006
+207=2007
+208=2008
+209=2009
+210=2010
+211=2011
+212=2012
+213=2013
+214=2014
+215=2015
+216=2016
+
+[Format=End Calc Vital Status (Adjusted)]
+0=Alive
+1=Dead
+2=Dead (other)
+3=Untraced
+4=Withdrawn
+5=Unknown
+
