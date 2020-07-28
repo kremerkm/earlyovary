@@ -1,6 +1,6 @@
 library(tidyverse)
 
-View(library(SEER2R)
+library(SEER2R)
 #Read SEER case files for ovarian cancer from 2004-2015 into data.frame
 ovary.df <- read.SeerStat("ovcase_2004-2015.dic", UseVarLabelsInData = TRUE)
 
@@ -68,7 +68,7 @@ ovary.tib = ovary.tib %>%
 ovary.tib$FollowDate <- as.yearmon(ovary.tib$FollowDate, format = "%Y-%B")
 
 #Change COD variable to Alive or Dead
-ovary.tib$COD <- ifelse(ovary.tib$COD == "Alive", 0, 1)
+ovary.tib$COD <- ifelse(ovary.tib$COD == "Alive or dead of other cause", 0, 1)
 
 #Filter out HGSOC
 serous <- filter(ovary.tib, Histo == "441" | Histo == "460" | Histo == "461" )
