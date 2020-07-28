@@ -83,6 +83,10 @@ table(HGserous$T_Stage, HGserous$Nodes_Ex)
 
 #Create KM survival fit line using library(survival) and library(survminer)
 #
+library(survival)
+
+library(survminer)
+
 ##fit <- survfit(Surv(time = [time variable], event = [censoring variable]) ~ [stratification variable], data = [dataset])
 #
 ###ggsurvplot(fitChemoNodes36, data = HGserousChemo36, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Chemo with nodal status at 3y", legend = "bottom", legend.title = "LN status")
