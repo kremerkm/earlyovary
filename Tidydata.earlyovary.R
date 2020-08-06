@@ -67,7 +67,7 @@ ovary.tib = ovary.tib %>%
 
 ovary.tib$FollowDate <- as.yearmon(ovary.tib$FollowDate, format = "%Y-%B")
 
-#Change COD variable to Alive or Dead
+#Change COD variable to Alive(0) or Dead(1)
 ovary.tib$COD <- ifelse(ovary.tib$COD == "Alive or dead of other cause", 0, 1)
 
 #Filter out HGSOC
