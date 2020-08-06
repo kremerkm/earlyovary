@@ -74,6 +74,13 @@ ovary.tib$COD <- ifelse(ovary.tib$COD == "Alive or dead of other cause", 0, 1)
 serous <- filter(ovary.tib, Histo == "441" | Histo == "460" | Histo == "461" )
 HGS <- filter(serous, Grade == 3 | Grade == 4)
 
+#Filter those with HGSOC who got chemo
+HGS_chemo <- filter(HGS, HGS$Chemo == "Yes")
+
+#Filter HGSOC w/chemo and unknown nodal status (Nx)
+HGS_chemoNx <- filter(HGS_chemo,HGS_chemo$Nodes_Ex == "None")
+
+
 #Stratify HGSOC by stage and whether or not they had nodes evaluated
 table(HGserous$T_Stage, HGserous$Nodes_Ex)
 ###    Adequate Inadequate None
