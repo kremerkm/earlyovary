@@ -134,6 +134,7 @@ ggsurvplot(fit_Nx_byChemo, data = HGS_Nx, pval = TRUE, xlab = "Months", break.ti
 #Create combined fit_list of HGSOC with Nx nodes that received chemo and HGSOC w/wo Chemo strat by LND
 fit_combine_NXchemo_byLND <- list(Nx_Chemo = fit_Nx_Chemo, LND = fit_byLND)
 
-#Plot HGSOC with Nx nodes that received chemo and HGSOC w/wo Chemo strat by LND
+#Plot HGSOC with Nx nodes that received chemo and HGSOC w/wo Chemo strat by LND for 5 years
 ggsurvplot_combine(fit_combine_NXchemo_byLND, data = HGS, pval = TRUE, xlab = "Months", xlim = c(0,36), break.time.by = 6, legend = "bottom")
+
 
