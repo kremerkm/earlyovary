@@ -72,7 +72,7 @@ ovary.tib$COD <- ifelse(ovary.tib$COD == "Alive or dead of other cause", 0, 1)
 
 #Filter out HGSOC
 serous <- filter(ovary.tib, Histo == "441" | Histo == "460" | Histo == "461" )
-HGserous <- filter(serous, Grade == 3 | Grade == 4)
+HGS <- filter(serous, Grade == 3 | Grade == 4)
 
 #Stratify HGSOC by stage and whether or not they had nodes evaluated
 table(HGserous$T_Stage, HGserous$Nodes_Ex)
