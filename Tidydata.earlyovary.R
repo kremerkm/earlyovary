@@ -78,7 +78,7 @@ HGS <- filter(serous, Grade == 3 | Grade == 4)
 HGS.chemo <- filter(HGS, HGS$Chemo == "Yes")
 
 #Filter HGSOC w/chemo and unknown nodal status (Nx)
-HGS.chemoNx <- filter(HGS_chemo,HGS_chemo$Nodes_Ex == "None")
+HGS.chemoNx <- filter(HGS.chemo,HGS.chemo$Nodes_Ex == "None")
 
 #Filter HGSOC who did not get chemo/unknown chemo status
 HGS.nochemo <- filter(HGS, HGS$Chemo != "Yes")
@@ -86,8 +86,13 @@ HGS.nochemo <- filter(HGS, HGS$Chemo != "Yes")
 #Filter HGSOC who have Nx nodes
 HGS.Nx <- filter(HGS, HGS$Nodes_Ex == "None")
 
+#Filter HGS.Nx at 36mo and 60mo
+HGS.Nx36 <- filter(HGS.Nx, HGS.Nx$SurvMonths < 37)
+
+HGS.Nx60 <- filter(HGS.Nx, HGS.Nx$SurvMonths < 61)
+
 #Stratify HGSOC by stage and whether or not they had nodes evaluated
-table(HGserous$T_Stage, HGserous$Nodes_Ex)
+table(HGS$T_Stage, HGS$Nodes_Ex)
 ###    Adequate Inadequate None
 ###T1a      210        113  118
 ###T1b       81         37   22
@@ -103,12 +108,12 @@ library(survminer)
 ##ggsurvplot(fit, data = [dataset]) ##Lots of attributes available for custom plots##
 
 #Fit equation for HGSOC stratified by LND with or without chemo
-fit.byLND <- survfit(Surv(time = HGS$SurvMonths, event = HGS$COD) ~ HGS$Nodes.Ex, data = HGS)
+fit.byLND <- survfit(Surv(time = HGS$SurvMonths, event = HGS$COD) ~ HGS$Nodes_Ex, data = HGS)
 
 #Survival curve for HGSOC stratified by LND with or without chemo
 ggsurvplot(fit.byLND, data = HGS, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival stratified by LND with or without Chemo", legend = "bottom", legend.title = "LN status")
 
-#Fit equation for HGSOC with Nx nodes who received chemo
+#Fit equation for HGSOC with Nx nodes who received chemo overall
 fit.Nx.Chemo <- survfit(Surv(time = HGS.chemoNx$SurvMonths, event = HGS.chemoNx$COD), data = HGS.chemoNx)
 
 #Fit equation for HGSOC that did not receive chemo stratified by Nodal status
@@ -117,11 +122,19 @@ fit.nochemo.byLND <- survfit(Surv(time = HGS.nochemo$SurvMonths, event = HGS.noc
 #Survival curve for HGSOC that did not receive chemo stratified by Nodal status at 5 years
 ggsurvplot(fit.nochemo.byLND, data = HGS.nochemo, pval = TRUE, xlab = "Months", break.time.by = 6, xlim = c(0,60), title = "Survival stratified by LND without Chemo", legend = "bottom", legend.title = "LN status")
 
-#Fit equation for HGSOC with Nx nodes stratified by chemo status
+#Fit equation for HGSOC with Nx nodes stratified by chemo status overall/36mo/60mo
 fit.Nx.byChemo <- survfit(Surv(time = HGS.Nx$SurvMonths, event = HGS.Nx$COD) ~ HGS.Nx$Chemo, data = HGS.Nx)
 
-#Survplot for HGSOC with Nx nodes stratified by chemo status
-ggsurvplot(fit.Nx.byChemo, data = HGS.Nx, pval = TRUE, xlab = "Months", break.time.by = 6, xlim = c(0,60), title = "Survival of Nx strat by Chemo", legend = "bottom", legend.title = "Chemo Received")
+fit.Nx.byChemo36 <- survfit(Surv(time = HGS.Nx36$SurvMonths, event = HGS.Nx36$COD) ~ HGS.Nx36$Chemo, data = HGS.Nx36)
+
+fit.Nx.byChemo60 <- survfit(Surv(time = HGS.Nx60$SurvMonths, event = HGS.Nx60$COD) ~ HGS.Nx60$Chemo, data = HGS.Nx60)
+
+#Survplot for HGSOC with Nx nodes stratified by chemo status overall/36mo/60mo
+ggsurvplot(fit.Nx.byChemo, data = HGS.Nx, pval = TRUE, xlab = "Months", break.time.by = 12, title = "Survival of Nx strat by Chemo", legend = "bottom", legend.title = "Chemo Received")
+
+ggsurvplot(fit.Nx.byChemo36, data = HGS.Nx36, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival of Nx strat by Chemo at 3years", legend = "bottom", legend.title = "Chemo Received")
+
+ggsurvplot(fit.Nx.byChemo60, data = HGS.Nx60, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival of Nx strat by Chemo at 5 years", legend = "bottom", legend.title = "Chemo Received")
 
 ##Combine more than one fit equation on survival plot
 
