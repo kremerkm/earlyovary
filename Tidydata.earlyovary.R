@@ -80,6 +80,9 @@ HGS.chemo <- filter(HGS, HGS$Chemo == "Yes")
 #Filter HGSOC w/chemo and unknown nodal status (Nx)
 HGS.chemoNx <- filter(HGS.chemo,HGS.chemo$Nodes_Ex == "None")
 
+#Filter out those with negative nodes who received chemo
+HGS.chemo.N0removed <- filter(HGS.chemo, HGS.chemo$Nodes_Pos != "No")
+
 #Filter HGSOC who did not get chemo/unknown chemo status
 HGS.nochemo <- filter(HGS, HGS$Chemo != "Yes")
 
@@ -116,8 +119,20 @@ fit.byLND.chemo <- survfit(Surv(time = HGS.chemo$SurvMonths, event = HGS.chemo$C
 
 fit.byLND.nochemo <- survfit(Surv(time = HGS.nochemo$SurvMonths, event = HGS.nochemo$COD) ~ HGS.nochemo$Nodes_Ex, data = HGS.nochemo)
 
+#Fit equation for HGSOC receiving chemo stratified by nodal status
+fit.byNodeStat.chemo <- survfit(Surv(time = HGS.chemo$SurvMonths, event = HGS.chemo$COD) ~ HGS.chemo$Nodes_Pos, data = HGS.chemo)
+
+#Fit equation for HGSOC receiving chemo ~ nodal status with N0 removed
+fit.byNodeStatN0remove.chemo <- survfit(Surv(time = HGS.chemo.N0removed$SurvMonths, event = HGS.chemo.N0removed$COD) ~ HGS.chemo.N0removed$Nodes_Pos, data = HGS.chemo.N0removed)
+
 #Survival curve for HGSOC stratified by LND with or without chemo
 ggsurvplot(fit.byLND, data = HGS, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival stratified by LND with or without Chemo", legend = "bottom", legend.title = "LN status")
+
+#Survival curve for HGSOC receiving chemo ~ nodal status
+ggsurvplot(fit.byNodeStat.chemo, data = HGS.chemo, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status", legend = "bottom", legend.title = "Nodal Status")
+
+#Survival curve for HGSOC receiving chemo ~ nodal status with N0 removed
+ggsurvplot(fit.byNodeStatN0remove.chemo, data = HGS.chemo.N0removed, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status", legend = "bottom", legend.title = "Nodal Status")
 
 #Fit equation for HGSOC with Nx nodes who received chemo overall
 fit.Nx.Chemo <- survfit(Surv(time = HGS.chemoNx$SurvMonths, event = HGS.chemoNx$COD) ~ 1, data = HGS.chemoNx)
@@ -163,6 +178,6 @@ fit.combine.N1chemo.byLNDchemo <- list(N1 = fit.N1.Chemo, LND = fit.byLND.chemo)
 ggsurvplot_combine(fit.combine.NXchemo.byLND, data = HGS, pval = TRUE, xlab = "Months", break.time.by = 6, legend = "bottom")
 
 #Plot HGSOC with N1 nodes on top of HGSOC stratified by LND with all patients receiving chemo
-ggsurvplot_combine(fit.combine.N1chemo.byLNDchemo, data = HGS, risk.table = FALSE, pval = TRUE, xlab = "Months", break.time.by = 6, legend = "bottom", title = "Positive nodes plotted on top of HGSOC ~ LND, all with chemo")
+ggsurvplot_combine(fit.combine.N1chemo.byLNDchemo, data = HGS, risk.table = FALSE, ggtheme = theme_grey(), pval = TRUE, xlab = "Months", break.time.by = 6, legend = "bottom", title = "Positive nodes plotted on top of HGSOC ~ LND, all with chemo")
 
 
