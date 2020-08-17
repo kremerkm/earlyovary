@@ -128,6 +128,12 @@ fit.byNodeStatN0remove.chemo <- survfit(Surv(time = HGS.chemo.N0removed$SurvMont
 #Survival curve for HGSOC stratified by LND with or without chemo
 ggsurvplot(fit.byLND, data = HGS, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival stratified by LND with or without Chemo", legend = "bottom", legend.title = "LN status")
 
+#Survival curve for HGSOC stratified by LND with chemo
+ggsurvplot(fit.byLND.chemo, data = HGS.chemo, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival stratified by LND with Chemo", legend = "bottom", legend.title = "LN status")
+
+#Survival curve for HGSOC stratified by LND without chemo
+ggsurvplot(fit.byLND.nochemo, data = HGS.nochemo, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival stratified by LND with no/unknown Chemo", legend = "bottom", legend.title = "LN status")
+
 #Survival curve for HGSOC receiving chemo ~ nodal status
 ggsurvplot(fit.byNodeStat.chemo, data = HGS.chemo, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status", legend = "bottom", legend.title = "Nodal Status")
 
