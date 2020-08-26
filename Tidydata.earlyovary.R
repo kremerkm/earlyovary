@@ -80,8 +80,14 @@ HGS.chemo <- filter(HGS, HGS$Chemo == "Yes")
 #Filter HGSOC w/chemo and unknown nodal status (Nx)
 HGS.chemoNx <- filter(HGS.chemo,HGS.chemo$Nodes_Ex == "None")
 
-#Filter out those with negative nodes who received chemo
+#Filter out those with negative nodes who received chemo all/24mo/36mo/60mo
 HGS.chemo.N0removed <- filter(HGS.chemo, HGS.chemo$Nodes_Pos != "No")
+
+HGS.chemo.N0removed24 <- filter(HGS.chemo.N0removed, HGS.chemo.N0removed$SurvMonths < 25)
+
+HGS.chemo.N0removed36 <- filter(HGS.chemo.N0removed, HGS.chemo.N0removed$SurvMonths < 37)
+
+HGS.chemo.N0removed60 <- filter(HGS.chemo.N0removed, HGS.chemo.N0removed$SurvMonths < 61)
 
 #Filter HGSOC who did not get chemo/unknown chemo status
 HGS.nochemo <- filter(HGS, HGS$Chemo != "Yes")
@@ -128,8 +134,14 @@ fit.byLND.nochemo <- survfit(Surv(time = HGS.nochemo$SurvMonths, event = HGS.noc
 #Fit equation for HGSOC receiving chemo stratified by nodal status
 fit.byNodeStat.chemo <- survfit(Surv(time = HGS.chemo$SurvMonths, event = HGS.chemo$COD) ~ HGS.chemo$Nodes_Pos, data = HGS.chemo)
 
-#Fit equation for HGSOC receiving chemo ~ nodal status with N0 removed
+#Fit equation for HGSOC receiving chemo ~ nodal status with N0 removed all/24mo/36mo/60mo
 fit.byNodeStatN0remove.chemo <- survfit(Surv(time = HGS.chemo.N0removed$SurvMonths, event = HGS.chemo.N0removed$COD) ~ HGS.chemo.N0removed$Nodes_Pos, data = HGS.chemo.N0removed)
+
+fit.byNodeStatN0remove.chemo24 <- survfit(Surv(time = HGS.chemo.N0removed24$SurvMonths, event = HGS.chemo.N0removed24$COD) ~ HGS.chemo.N0removed24$Nodes_Pos, data = HGS.chemo.N0removed24)
+
+fit.byNodeStatN0remove.chemo36 <- survfit(Surv(time = HGS.chemo.N0removed36$SurvMonths, event = HGS.chemo.N0removed36$COD) ~ HGS.chemo.N0removed36$Nodes_Pos, data = HGS.chemo.N0removed36)
+
+fit.byNodeStatN0remove.chemo60 <- survfit(Surv(time = HGS.chemo.N0removed60$SurvMonths, event = HGS.chemo.N0removed60$COD) ~ HGS.chemo.N0removed60$Nodes_Pos, data = HGS.chemo.N0removed60)
 
 #Fit equation for HGSOC receiving chemo ~ black race or not
 fit.byRace.black <- survfit(Surv(time = HGS.chemo.black$SurvMonths, event = HGS.chemo.black$COD) ~ HGS.chemo.black$Black.Race, data = HGS.chemo.black)
@@ -146,8 +158,14 @@ ggsurvplot(fit.byLND.nochemo, data = HGS.nochemo, pval = TRUE, xlab = "Months", 
 #Survival curve for HGSOC receiving chemo ~ nodal status
 ggsurvplot(fit.byNodeStat.chemo, data = HGS.chemo, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status", legend = "bottom", legend.title = "Nodal Status")
 
-#Survival curve for HGSOC receiving chemo ~ nodal status with N0 removed
+#Survival curve for HGSOC receiving chemo ~ nodal status with N0 removed all/24mo/36mo/60mo
 ggsurvplot(fit.byNodeStatN0remove.chemo, data = HGS.chemo.N0removed, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status", legend = "bottom", legend.title = "Nodal Status")
+
+ggsurvplot(fit.byNodeStatN0remove.chemo24, data = HGS.chemo.N0removed24, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status at 2 years", legend = "bottom", legend.title = "Nodal Status")
+
+ggsurvplot(fit.byNodeStatN0remove.chemo36, data = HGS.chemo.N0removed36, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status at 3 years", legend = "bottom", legend.title = "Nodal Status")
+
+ggsurvplot(fit.byNodeStatN0remove.chemo60, data = HGS.chemo.N0removed60, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status at 5 years", legend = "bottom", legend.title = "Nodal Status")
 
 #Survival curve for HGSOC receiving chemo ~ black race
 ggsurvplot(fit.byRace.black, data = HGS.chemo.black, pval = TRUE)
