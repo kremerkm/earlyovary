@@ -86,8 +86,10 @@ HGS.chemo.N0removed <- filter(HGS.chemo, HGS.chemo$Nodes_Pos != "No")
 #Filter HGSOC who did not get chemo/unknown chemo status
 HGS.nochemo <- filter(HGS, HGS$Chemo != "Yes")
 
-#Filter HGSOC who have Nx nodes overall/36mo/60mo
+#Filter HGSOC who have Nx nodes overall/24mo/36mo/60mo
 HGS.Nx <- filter(HGS, HGS$Nodes_Ex == "None")
+
+HGS.Nx24 <- filter(HGS.Nx, HGS.Nx$SurvMonths < 25)
 
 HGS.Nx36 <- filter(HGS.Nx, HGS.Nx$SurvMonths < 37)
 
@@ -95,6 +97,10 @@ HGS.Nx60 <- filter(HGS.Nx, HGS.Nx$SurvMonths < 61)
 
 #Filter HGSOC who have positive nodes and received chemo
 HGS.chemoN1 <- filter(HGS.chemo, HGS.chemo$Nodes_Pos == "Yes")
+
+#Filter HGSOC who have received chemo by whether or not they are black
+HGS.chemo.black = mutate(HGS.chemo, Black.Race = ifelse(HGS.chemo$Race == "Black", "yes", "no") )
+
 
 #Stratify HGSOC by stage and whether or not they had nodes evaluated
 table(HGS$T_Stage, HGS$Nodes_Ex)
@@ -125,6 +131,9 @@ fit.byNodeStat.chemo <- survfit(Surv(time = HGS.chemo$SurvMonths, event = HGS.ch
 #Fit equation for HGSOC receiving chemo ~ nodal status with N0 removed
 fit.byNodeStatN0remove.chemo <- survfit(Surv(time = HGS.chemo.N0removed$SurvMonths, event = HGS.chemo.N0removed$COD) ~ HGS.chemo.N0removed$Nodes_Pos, data = HGS.chemo.N0removed)
 
+#Fit equation for HGSOC receiving chemo ~ black race or not
+fit.byRace.black <- survfit(Surv(time = HGS.chemo.black$SurvMonths, event = HGS.chemo.black$COD) ~ HGS.chemo.black$Black.Race, data = HGS.chemo.black)
+
 #Survival curve for HGSOC stratified by LND with or without chemo
 ggsurvplot(fit.byLND, data = HGS, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival stratified by LND with or without Chemo", legend = "bottom", legend.title = "LN status")
 
@@ -140,6 +149,9 @@ ggsurvplot(fit.byNodeStat.chemo, data = HGS.chemo, pval = TRUE, xlab = "Months",
 #Survival curve for HGSOC receiving chemo ~ nodal status with N0 removed
 ggsurvplot(fit.byNodeStatN0remove.chemo, data = HGS.chemo.N0removed, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status", legend = "bottom", legend.title = "Nodal Status")
 
+#Survival curve for HGSOC receiving chemo ~ black race
+ggsurvplot(fit.byRace.black, data = HGS.chemo.black, pval = TRUE)
+
 #Fit equation for HGSOC with Nx nodes who received chemo overall
 fit.Nx.Chemo <- survfit(Surv(time = HGS.chemoNx$SurvMonths, event = HGS.chemoNx$COD) ~ 1, data = HGS.chemoNx)
 
@@ -152,8 +164,10 @@ fit.nochemo.byLND <- survfit(Surv(time = HGS.nochemo$SurvMonths, event = HGS.noc
 #Survival curve for HGSOC that did not receive chemo stratified by Nodal status at 5 years
 ggsurvplot(fit.nochemo.byLND, data = HGS.nochemo, pval = TRUE, xlab = "Months", break.time.by = 6, xlim = c(0,60), title = "Survival stratified by LND without Chemo", legend = "bottom", legend.title = "LN status")
 
-#Fit equation for HGSOC with Nx nodes stratified by chemo status overall/36mo/60mo
+#Fit equation for HGSOC with Nx nodes stratified by chemo status overall/24mo/36mo/60mo
 fit.Nx.byChemo <- survfit(Surv(time = HGS.Nx$SurvMonths, event = HGS.Nx$COD) ~ HGS.Nx$Chemo, data = HGS.Nx)
+
+fit.Nx.byChemo24 <- survfit(Surv(time = HGS.Nx24$SurvMonths, event = HGS.Nx24$COD) ~ HGS.Nx24$Chemo, data = HGS.Nx24)
 
 fit.Nx.byChemo36 <- survfit(Surv(time = HGS.Nx36$SurvMonths, event = HGS.Nx36$COD) ~ HGS.Nx36$Chemo, data = HGS.Nx36)
 
@@ -161,6 +175,8 @@ fit.Nx.byChemo60 <- survfit(Surv(time = HGS.Nx60$SurvMonths, event = HGS.Nx60$CO
 
 #Survplot for HGSOC with Nx nodes stratified by chemo status overall/36mo/60mo
 ggsurvplot(fit.Nx.byChemo, data = HGS.Nx, pval = TRUE, xlab = "Months", break.time.by = 12, title = "Survival of Nx strat by Chemo", legend = "bottom", legend.title = "Chemo Received")
+
+ggsurvplot(fit.Nx.byChemo24, data = HGS.Nx24, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival of Nx strat by Chemo at 2years", legend = "bottom", legend.title = "Chemo Received")
 
 ggsurvplot(fit.Nx.byChemo36, data = HGS.Nx36, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival of Nx strat by Chemo at 3years", legend = "bottom", legend.title = "Chemo Received")
 
