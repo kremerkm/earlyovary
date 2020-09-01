@@ -70,9 +70,10 @@ ovary.tib$FollowDate <- as.yearmon(ovary.tib$FollowDate, format = "%Y-%B")
 #Change COD variable to Alive(0) or Dead(1)
 ovary.tib$COD <- ifelse(ovary.tib$COD == "Alive or dead of other cause", 0, 1)
 
-#Filter out HGSOC
+#Filter out HGSOC and add column for black race
 serous <- filter(ovary.tib, Histo == "441" | Histo == "460" | Histo == "461" )
 HGS <- filter(serous, Grade == 3 | Grade == 4)
+HGS = mutate(HGS, Black.Race = ifelse(HGS$Race == "Black", "yes", "no") )
 
 #Filter those with HGSOC who got chemo
 HGS.chemo <- filter(HGS, HGS$Chemo == "Yes")
@@ -103,9 +104,6 @@ HGS.Nx60 <- filter(HGS.Nx, HGS.Nx$SurvMonths < 61)
 
 #Filter HGSOC who have positive nodes and received chemo
 HGS.chemoN1 <- filter(HGS.chemo, HGS.chemo$Nodes_Pos == "Yes")
-
-#Filter HGSOC who have received chemo by whether or not they are black
-HGS.chemo.black = mutate(HGS.chemo, Black.Race = ifelse(HGS.chemo$Race == "Black", "yes", "no") )
 
 
 #Stratify HGSOC by stage and whether or not they had nodes evaluated
@@ -144,7 +142,7 @@ fit.byNodeStatN0remove.chemo36 <- survfit(Surv(time = HGS.chemo.N0removed36$Surv
 fit.byNodeStatN0remove.chemo60 <- survfit(Surv(time = HGS.chemo.N0removed60$SurvMonths, event = HGS.chemo.N0removed60$COD) ~ HGS.chemo.N0removed60$Nodes_Pos, data = HGS.chemo.N0removed60)
 
 #Fit equation for HGSOC receiving chemo ~ black race or not
-fit.byRace.black <- survfit(Surv(time = HGS.chemo.black$SurvMonths, event = HGS.chemo.black$COD) ~ HGS.chemo.black$Black.Race, data = HGS.chemo.black)
+fit.byRace <- survfit(Surv(time = HGS.chemo$SurvMonths, event = HGS.chemo$COD) ~ HGS.chemo$Black.Race, data = HGS.chemo)
 
 #Survival curve for HGSOC stratified by LND with or without chemo
 ggsurvplot(fit.byLND, data = HGS, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival stratified by LND with or without Chemo", legend = "bottom", legend.title = "LN status")
@@ -176,11 +174,14 @@ fit.Nx.Chemo <- survfit(Surv(time = HGS.chemoNx$SurvMonths, event = HGS.chemoNx$
 #Fit equation for HGSOC with N1 nodes who received chemo overall
 fit.N1.Chemo <- survfit(Surv(time = HGS.chemoN1$SurvMonths, event = HGS.chemoN1$COD) ~ 1, data = HGS.chemoN1)
 
-#Fit equation for HGSOC that did not receive chemo stratified by Nodal status
+#Fit equation for HGSOC that did not receive chemo stratified by Nodal status/Race
 fit.nochemo.byLND <- survfit(Surv(time = HGS.nochemo$SurvMonths, event = HGS.nochemo$COD) ~ HGS.nochemo$Nodes_Ex, data = HGS.nochemo)
 
-#Survival curve for HGSOC that did not receive chemo stratified by Nodal status at 5 years
-ggsurvplot(fit.nochemo.byLND, data = HGS.nochemo, pval = TRUE, xlab = "Months", break.time.by = 6, xlim = c(0,60), title = "Survival stratified by LND without Chemo", legend = "bottom", legend.title = "LN status")
+fit.nochemo.byRace <- survfit(Surv(time = HGS.nochemo$SurvMonths, event = HGS.nochemo$COD) ~ HGS.nochemo$Black.Race, data = HGS.nochemo)
+#Survival curve for HGSOC that did not receive chemo stratified by Nodal status/Race
+ggsurvplot(fit.nochemo.byLND, data = HGS.nochemo, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival stratified by LND without Chemo", legend = "bottom", legend.title = "LN status")
+
+ggsurvplot(fit.nochemo.byRace, data = HGS.nochemo, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival stratified by Race without Chemo", legend = "bottom", legend.title = "Race")
 
 #Fit equation for HGSOC with Nx nodes stratified by chemo status overall/24mo/36mo/60mo
 fit.Nx.byChemo <- survfit(Surv(time = HGS.Nx$SurvMonths, event = HGS.Nx$COD) ~ HGS.Nx$Chemo, data = HGS.Nx)
