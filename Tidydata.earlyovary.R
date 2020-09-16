@@ -91,6 +91,8 @@ HGS.chemo.N0removed36 <- filter(HGS.chemo.N0removed, HGS.chemo.N0removed$SurvMon
 
 HGS.chemo.N0removed60 <- filter(HGS.chemo.N0removed, HGS.chemo.N0removed$SurvMonths < 61)
 
+HGS.chemo.N0removed120 <- filter(HGS.chemo.N0removed, HGS.chemo.N0removed$SurvMonths < 121)
+
 #Filter HGSOC who did not get chemo/unknown chemo status
 HGS.nochemo <- filter(HGS, HGS$Chemo != "Yes")
 
@@ -142,6 +144,8 @@ fit.byNodeStatN0remove.chemo36 <- survfit(Surv(time = HGS.chemo.N0removed36$Surv
 
 fit.byNodeStatN0remove.chemo60 <- survfit(Surv(time = HGS.chemo.N0removed60$SurvMonths, event = HGS.chemo.N0removed60$COD) ~ HGS.chemo.N0removed60$Nodes_Pos, data = HGS.chemo.N0removed60)
 
+fit.byNodeStatN0remove.chemo120 <- survfit(Surv(time = HGS.chemo.N0removed120$SurvMonths, event = HGS.chemo.N0removed120$COD) ~ HGS.chemo.N0removed120$Nodes_Pos, data = HGS.chemo.N0removed120)
+
 #Fit equation for HGSOC receiving chemo ~ black race or not
 fit.byRace <- survfit(Surv(time = HGS.chemo$SurvMonths, event = HGS.chemo$COD) ~ HGS.chemo$Black.Race, data = HGS.chemo)
 
@@ -165,6 +169,8 @@ ggsurvplot(fit.byNodeStatN0remove.chemo24, data = HGS.chemo.N0removed24, pval = 
 ggsurvplot(fit.byNodeStatN0remove.chemo36, data = HGS.chemo.N0removed36, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status at 3 years", legend = "bottom", legend.title = "Nodal Status")
 
 ggsurvplot(fit.byNodeStatN0remove.chemo60, data = HGS.chemo.N0removed60, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status at 5 years", legend = "bottom", legend.title = "Nodal Status")
+
+ggsurvplot(fit.byNodeStatN0remove.chemo120, data = HGS.chemo.N0removed120, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival in patients receiving Chemo ~ Nodal status at 10 years", legend = "bottom", legend.title = "Nodal Status")
 
 #Survival curve for HGSOC receiving chemo ~ black race
 ggsurvplot(fit.byRace.black, data = HGS.chemo.black, pval = TRUE)
