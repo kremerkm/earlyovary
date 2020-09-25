@@ -1,6 +1,9 @@
 library(tidyverse)
-
 library(SEER2R)
+library(zoo)
+library(survival)
+library(survminer)
+
 #Read SEER case files for ovarian cancer from 2004-2015 into data.frame
 ovary.df <- read.SeerStat("ovcase_2004-2015.dic", UseVarLabelsInData = TRUE)
 
@@ -59,7 +62,6 @@ ovary.tib$Nodes_Pos <- ifelse(ovary.tib$Nodes_Pos == 0, "No",
 ovary.tib = ovary.tib %>% 
         unite(DiagDate, c(DiagYear, DiagMonth), sep = "-")
 
-library(zoo)
 ovary.tib$DiagDate <- as.yearmon(ovary.tib$DiagDate, format = "%Y-%B")
 
 ovary.tib = ovary.tib %>% 
@@ -118,9 +120,6 @@ table(HGS$T_Stage, HGS$Nodes_Ex)
 
 #Create KM survival fit line using library(survival) and library(survminer)
 
-library(survival)
-
-library(survminer)
 
 ##fit <- survfit(Surv(time = [time variable], event = [censoring variable]) ~ [stratification variable], data = [dataset])
 ##ggsurvplot(fit, data = [dataset]) ##Lots of attributes available for custom plots##
