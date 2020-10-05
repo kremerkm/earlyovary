@@ -2,7 +2,9 @@
 title: "Early Ovarian Cancer"
 author: "Kevin Kremer"
 date: "9/24/2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -12,6 +14,8 @@ library(SEER2R)
 library(zoo)
 library(survival)
 library(survminer)
+library(kableExtra)
+
 #Read SEER case files for ovarian cancer from 2004-2015 into data.frame
 ovary.df <- read.SeerStat("ovcase_2004-2015.dic", UseVarLabelsInData = TRUE)
 
@@ -98,7 +102,17 @@ fit.Black <- survfit(Surv(SurvMonths, COD) ~ Black.Race, data = HGS)
 ggsurvplot(fit.Black, data = HGS, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival of Black Race compared to all other races", legend = "bottom", legend.title = "Race")
 ```
 ```{r}
-table(HGS$Black.Race)
+HGS.tbl <- table(HGS$Black.Race)
+kbl(HGS.tbl, col.names = c("Black Race", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+HGS.chemo.tbl <- table(HGS$Black.Race, HGS$Chemo) 
+kbl(HGS.chemo.tbl) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left") %>% 
+        add_header_above(c("Black Race", "Chemo Received" = 2))
+```
+```{r, echo = FALSE}
+ph.Black <- coxph(Surv(SurvMonths, COD) ~ Black.Race + Nodes_Pos + Chemo, data = HGS)
+ggforest(ph.Black, data = HGS)
 ```
 
 ### Broken down by Stage
@@ -110,6 +124,7 @@ T1.N1.M0.Black <- filter(HGS, Nodes_Pos == "Yes" & M_Stage == "M0")
 mets.Black <- filter(HGS, M_Stage == "M1")
 ```
 
+
 #### T1N0M0
 
 ```{r, echo=FALSE}
@@ -119,6 +134,10 @@ ggsurvplot(fit.T1.N0.M0.Black, data = T1.N0.M0.Black, pval = TRUE, xlab = "Month
 ```{r}
 table(T1.N0.M0.Black$Black.Race)
 ```
+```{r, echo = FALSE}
+ph.T1.N0.M0.Black <- coxph(Surv(SurvMonths, COD) ~ Black.Race + Chemo, data = T1.N0.M0.Black)
+ggforest(ph.T1.N0.M0.Black, data = T1.N0.M0.Black)
+```
 
 #### T1NxM0
 
@@ -126,8 +145,18 @@ table(T1.N0.M0.Black$Black.Race)
 fit.T1.Nx.M0.Black <- survfit(Surv(SurvMonths, COD) ~ Black.Race, data = T1.Nx.M0.Black)
 ggsurvplot(fit.T1.Nx.M0.Black, data = T1.Nx.M0.Black, pval = TRUE, xlab = "Months", break.time.by = 6, title = "Survival of T1NxM0 stratified by Race", legend = "bottom", legend.title = "Race")
 ```
+```{r, echo = FALSE}
+T1.Nx.M0.tbl <- table(T1.Nx.M0.Black$Black.Race, T1.Nx.M0.Black$Chemo) 
+kbl(T1.Nx.M0.tbl) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left") %>% 
+        add_header_above(c("Black Race", "Chemo Received" = 2))
+```
+```{r, echo = FALSE}
+ph.T1.Nx.M0.Black <- coxph(Surv(SurvMonths, COD) ~ Black.Race + Chemo, data = T1.Nx.M0.Black)
+ggforest(ph.T1.Nx.M0.Black, data = T1.Nx.M0.Black)
+```
 ```{r}
-table(T1.Nx.M0.Black$Black.Race)
+table(T1.Nx.M0.Black$Black.Race, T1.Nx.M0.Black$Chemo)
 ```
 
 #### T1N1M0
@@ -139,6 +168,12 @@ ggsurvplot(fit.T1.N1.M0.Black, data = T1.N1.M0.Black, pval = TRUE, xlab = "Month
 ```{r}
 table(T1.N1.M0.Black$Black.Race)
 ```
+```{r, echo = FALSE}
+ph.T1.N1.M0.Black <- coxph(Surv(SurvMonths, COD) ~ Black.Race + Chemo, data = T1.N1.M0.Black)
+ggforest(ph.T1.N1.M0.Black, data = T1.N1.M0.Black)
+```
+
+
 
 #### Metastatic Disease
 
