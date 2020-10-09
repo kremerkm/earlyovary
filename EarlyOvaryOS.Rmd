@@ -15,6 +15,7 @@ library(zoo)
 library(survival)
 library(survminer)
 library(kableExtra)
+library(RColorBrewer)
 
 #Read SEER case files for ovarian cancer from 2004-2015 into data.frame
 ovary.df <- read.SeerStat("ovcase_2004-2015.dic", UseVarLabelsInData = TRUE)
@@ -96,9 +97,7 @@ HGS.mets <- filter(HGS, M_Stage == "M1")
 #change order of Strata
 HGS$TNM.Stage <- factor(HGS$TNM.Stage, levels = c('T1N0M0', 'T1NxM0', 'T1N1M0', 'Any M1'))
 fit.byStage <- survfit(Surv(SurvMonths, COD) ~ TNM.Stage, data = HGS)
-ggsurvplot(fit.byStage, data = HGS, test.for.trend = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival Stratified by TNM Stage", legend.labs = c("T1N0M0", "T1NxM0", "T1N1M0", "Any M1"), legend.title = "Stage", legend = "bottom")
-```
-```{r, echo = FALSE}
+ggsurvplot(fit.byStage, data = HGS, test.for.trend = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival Stratified by TNM Stage", legend.labs = c("T1N0M0", "T1NxM0", "T1N1M0", "Any M1"), legend.title = "Stage", legend = "bottom", palette = "Set1", ggtheme = theme_gray())
 pairwise_survdiff(Surv(SurvMonths, COD) ~ TNM.Stage, HGS, rho = 0)
 ```
 
@@ -106,10 +105,16 @@ pairwise_survdiff(Surv(SurvMonths, COD) ~ TNM.Stage, HGS, rho = 0)
 
 ```{r, echo=FALSE}
 fit.byLND <- survfit(Surv(SurvMonths, COD) ~ Nodes_Ex, data = HGS.ES)
-ggsurvplot(fit.byLND, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival of presumed early-stage HGSOC stratified \nby lymph node dissection", legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"))
+ggsurvplot(fit.byLND, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival of presumed early-stage HGSOC stratified \nby lymph node dissection", legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"), palette = "Set1", ggtheme = theme_gray())
+pairwise_survdiff(Surv(SurvMonths, COD) ~ Nodes_Ex, HGS.ES, rho = 0)
+HGS.ES.byLNDtbl <- table(HGS.ES$Nodes_Ex)
+kbl(HGS.ES.byLNDtbl, col.names = c("Lymphadenectomy", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 ```
 ```{r, echo = FALSE}
-pairwise_survdiff(Surv(SurvMonths, COD) ~ Nodes_Ex, HGS.ES, rho = 0)
+ph.byLND <- coxph(Surv(SurvMonths, COD) ~ Nodes_Ex, HGS.ES)
+ggforest(ph.byLND, HGS.ES)
+summary(ph.byLND)
 ```
 
 # In patient's without LND, does adding chemo change their survival?
@@ -117,7 +122,15 @@ pairwise_survdiff(Surv(SurvMonths, COD) ~ Nodes_Ex, HGS.ES, rho = 0)
 ```{r, echo = FALSE}
 HGS.ES.chemo = filter(HGS.ES, Chemo == "Yes")
 fit.ES.chemo <- survfit(Surv(SurvMonths, COD) ~ Nodes_Pos, HGS.ES.chemo)
-ggsurvplot(fit.ES.chemo, HGS.ES.chemo, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Stage", legend.labs = c("T1N0M0", "T1NxMO"), title = "Survival of presumed early-stage HGSOC with chemotherapy")
+ggsurvplot(fit.ES.chemo, HGS.ES.chemo, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Stage", legend.labs = c("T1N0M0", "T1NxMO"), title = "Survival of presumed early-stage HGSOC with chemotherapy", palette = "Set1", ggtheme = theme_gray())
+HGS.ES.chemotbl <- table(HGS.ES.chemo$Nodes_Pos)
+kbl(HGS.ES.chemotbl, col.names = c("Positive Nodes", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+```{r, echo = FALSE}
+ph.ES.chemo <- coxph(Surv(SurvMonths, COD) ~ Nodes_Pos, HGS.ES.chemo)
+ggforest(ph.ES.chemo, HGS.ES.chemo)
+summary(ph.ES.chemo)
 ```
 
 # Survival difference between N0 patients with and without chemotherapy
@@ -125,7 +138,15 @@ ggsurvplot(fit.ES.chemo, HGS.ES.chemo, pval = TRUE, xlab = "Months", break.time.
 ```{r, echo = FALSE}
 HGS.N0$Chemo <- factor(HGS.N0$Chemo, levels = c('Yes', 'No/Unknown'))
 fit.N0.bychemo <- survfit(Surv(SurvMonths, COD) ~ Chemo, HGS.N0)
-ggsurvplot(fit.N0.bychemo, HGS.N0, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Received Chemotherapy", title = "Survival of T1N0M0 patients stratified \nby receipt of chemotherapy", legend.labs = c("Yes", "No/Unknown"))
+ggsurvplot(fit.N0.bychemo, HGS.N0, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Received Chemotherapy", title = "Survival of T1N0M0 patients stratified \nby receipt of chemotherapy", legend.labs = c("Yes", "No/Unknown"), palette = "Set1", ggtheme = theme_gray())
+HGS.N0.chemotbl <- table(HGS.N0$Chemo)
+kbl(HGS.N0.chemotbl, col.names = c("Received Chemotherapy", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+```{r, echo = FALSE}
+ph.N0.bychemo <- coxph(Surv(SurvMonths, COD) ~ Chemo, HGS.N0)
+ggforest(ph.N0.bychemo, HGS.N0)
+summary(ph.N0.bychemo)
 ```
 ```{r, echo = FALSE}
 knitr::knit_exit()
