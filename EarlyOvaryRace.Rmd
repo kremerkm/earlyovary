@@ -13,6 +13,7 @@ library(zoo)
 library(survival)
 library(survminer)
 library(kableExtra)
+library(RColorBrewer)
 
 #Read SEER case files for ovarian cancer from 2004-2015 into data.frame
 ovary.df <- read.SeerStat("ovcase_2004-2015.dic", UseVarLabelsInData = TRUE)
@@ -82,11 +83,120 @@ HGS = mutate(HGS, TNM.Stage = ifelse(Nodes_Pos == "No" & M_Stage == "M0", "T1N0M
                                             ifelse(Nodes_Pos == "Yes" & M_Stage == "M0", "T1N1M0", "Any M1"))))
 HGS.White.Black <- filter(HGS, HGS$Race == "Black" | HGS$Race == "White")
 HGS$Age.Group <- cut(HGS$DiagAge, breaks = c(18, 30, 40, 50, 60 ,70, 80, 120), labels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"), right = FALSE)
-HGS.ES <- filter(HGS,(Nodes_Pos == "No" | Nodes_Pos == "Unk") & M_Stage == "M0")
+HGS.ES <- filter(HGS,(Nodes_Pos == "No" | Nodes_Pos == "Unk") & M_Stage == "M0" & Race != "Unk")
 HGS.N0 <- filter(HGS, Nodes_Pos == "No" & M_Stage == "M0")
 HGS.Nx <- filter (HGS, Nodes_Pos == "Unk" & M_Stage == "M0")
 HGS.late <- filter (HGS, Nodes_Pos == "Yes" & M_Stage == "M0")
 HGS.mets <- filter(HGS, M_Stage == "M1")
+HGS.ES.WB <- filter(HGS.ES, Race == "Black" | Race == "White")
+HGS.ES.HB <- filter(HGS.ES, Race == "Black" | Race == "Hisp")
 ```
 
+# Survival of early-stage HGSOC by race
 
+```{r, echo = FALSE}
+HGS.ES$Race <- factor(HGS.ES$Race, levels = c('White', 'Black', 'Hisp', 'API', 'Native'))
+fit.byRace <- survfit(Surv(SurvMonths, COD) ~ Race, HGS.ES)
+ggsurvplot(fit.byRace, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("White", "Black", "Any Hispanic", "Asian/Pacific Islander", "Native American"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+pairwise_survdiff(Surv(SurvMonths, COD) ~ Race, HGS.ES, rho = 0)
+HGS.ES.Racetbl <- table(HGS.ES$Race)
+kbl(HGS.ES.Racetbl, col.names = c("Race", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+
+# Comparing Black Race to All Other Races Combined
+
+```{r, echo = FALSE}
+fit.byBlack.Race <- survfit(Surv(SurvMonths, COD) ~ Black.Race, HGS.ES)
+ggsurvplot(fit.byBlack.Race, HGS.ES, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("Other", "Black"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+HGS.ES.Black.Racetbl <- table(HGS.ES$Black.Race)
+kbl(HGS.ES.Black.Racetbl, col.names = c("Race", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+```{r, echo = FALSE}
+ph.Black.Race <- coxph(Surv(SurvMonths, COD) ~ Black.Race, HGS.ES)
+ggforest(ph.Black.Race, HGS.ES)
+summary(ph.Black.Race)
+```
+
+# Comparing Black Race to White Race
+
+```{r, echo = FALSE}
+HGS.ES.WB$Race <- factor(HGS.ES.WB$Race, levels = c('White', 'Black'))
+fit.byWB <- survfit(Surv(SurvMonths, COD) ~ Race, HGS.ES.WB)
+ggsurvplot(fit.byWB, HGS.ES.WB, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("White", "Black"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+HGS.ES.WBtbl <- table(HGS.ES.WB$Race)
+kbl(HGS.ES.WBtbl, col.names = c("Race", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+```{r, echo = FALSE}
+ph.WB <- coxph(Surv(SurvMonths, COD) ~ Race, HGS.ES.WB)
+ggforest(ph.WB, HGS.ES.WB)
+summary(ph.WB)
+```
+
+# Comparing Black Race to Hispanic Race
+
+```{r, echo = FALSE}
+HGS.ES.HB$Race <- factor(HGS.ES.HB$Race, levels = c('Hisp', 'Black'))
+fit.byHB <- survfit(Surv(SurvMonths, COD) ~ Race, HGS.ES.HB)
+ggsurvplot(fit.byHB, HGS.ES.HB, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("Any Hispanic", "Black"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+HGS.ES.HBtbl <- table(HGS.ES.HB$Race)
+kbl(HGS.ES.HBtbl, col.names = c("Race", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+```{r, echo = FALSE}
+ph.HB <- coxph(Surv(SurvMonths, COD) ~ Race, HGS.ES.HB)
+ggforest(ph.HB, HGS.ES.HB)
+summary(ph.HB)
+```
+
+# Does use of chemotherapy change outcomes in different races?
+
+## Black Race
+
+```{r, echo = FALSE}
+HGS.ES.Black.Chemo = filter(HGS.ES, Race == "Black" & Chemo == "Yes")
+fit.Black.Chemo = survfit(Surv(SurvMonths, COD) ~ Nodes_Pos, HGS.ES.Black.Chemo)
+ggsurvplot(fit.Black.Chemo, HGS.ES.Black.Chemo, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Stage", title = "Survival of Black early stage HGSOC patients that \nreceived chemotherapy stratified by Stage", legend.labs = c("T1N0M0", "T1NxM0"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+HGS.ES.Black.Chemotbl <- table(HGS.ES.Black.Chemo$Nodes_Pos)
+kbl(HGS.ES.Black.Chemotbl, col.names = c("Positive Nodes", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+```{r, echo = FALSE}
+ph.Black.Chemo <- coxph(Surv(SurvMonths, COD) ~ Nodes_Pos, HGS.ES.Black.Chemo)
+ggforest(ph.Black.Chemo, HGS.ES.Black.Chemo)
+summary(ph.Black.Chemo)
+```
+
+## White Race
+
+```{r, echo = FALSE}
+HGS.ES.White.Chemo = filter(HGS.ES, Race == "White" & Chemo == "Yes")
+fit.White.Chemo = survfit(Surv(SurvMonths, COD) ~ Nodes_Pos, HGS.ES.White.Chemo)
+ggsurvplot(fit.White.Chemo, HGS.ES.White.Chemo, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Stage", title = "Survival of White early stage HGSOC patients that \nreceived chemotherapy stratified by Stage", legend.labs = c("T1N0M0", "T1NxM0"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+HGS.ES.White.Chemotbl <- table(HGS.ES.White.Chemo$Nodes_Pos)
+kbl(HGS.ES.White.Chemotbl, col.names = c("Positive Nodes", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+```{r, echo = FALSE}
+ph.White.Chemo <- coxph(Surv(SurvMonths, COD) ~ Nodes_Pos, HGS.ES.White.Chemo)
+ggforest(ph.White.Chemo, HGS.ES.White.Chemo)
+summary(ph.White.Chemo)
+```
+
+## Hispanic Race
+
+```{r, echo = FALSE}
+HGS.ES.Hisp.Chemo = filter(HGS.ES, Race == "Hisp" & Chemo == "Yes")
+fit.Hisp.Chemo = survfit(Surv(SurvMonths, COD) ~ Nodes_Pos, HGS.ES.Hisp.Chemo)
+ggsurvplot(fit.Hisp.Chemo, HGS.ES.Hisp.Chemo, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Stage", title = "Survival of Hispanic early stage HGSOC patients that \nreceived chemotherapy stratified by Stage", legend.labs = c("T1N0M0", "T1NxM0"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+HGS.ES.Hisp.Chemotbl <- table(HGS.ES.Hisp.Chemo$Nodes_Pos)
+kbl(HGS.ES.Hisp.Chemotbl, col.names = c("Positive Nodes", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+```{r, echo = FALSE}
+ph.Hisp.Chemo <- coxph(Surv(SurvMonths, COD) ~ Nodes_Pos, HGS.ES.Hisp.Chemo)
+ggforest(ph.Hisp.Chemo, HGS.ES.Hisp.Chemo)
+summary(ph.Hisp.Chemo)
+```
