@@ -3,8 +3,8 @@ title: "Survival Outcomes of Early-Stage High Grade Serous Ovarian Cancer Using 
 author: "Kevin Kremer"
 date: "10/9/2020"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -17,8 +17,8 @@ library(survminer)
 library(kableExtra)
 library(RColorBrewer)
 
-#Read SEER case files for ovarian cancer from 2004-2015 into data.frame
-ovary.df <- read.SeerStat("ovcase_2004-2015.dic", UseVarLabelsInData = TRUE)
+#Read SEER case files for ovarian cancer from 2004-2016 into data.frame
+ovary.df <- read.SeerStat("ovcase_2004-2016.dic", UseVarLabelsInData = TRUE)
 
 #Change data.frame to tibble
 ovary.tib <- as_tibble(ovary.df)
@@ -28,6 +28,8 @@ ovary.tib = rename(ovary.tib,
             Race = "Race_and_origin_recode_NHW_NHB_NHAIAN_NHAPI_Hispanic",
             Histo = "Histologic_Type_ICDO3",
             Lat = "Laterality",
+            Summ_Stage = "SEER_Combined_Summary_Stage_2000_2004",
+            Stage_Group = "Derived_AJCC_Stage_Group_6th_ed_20042015",
             T_Stage = "Derived_AJCC_T_6th_ed_20042015",
             N_Stage = "Derived_AJCC_N_6th_ed_20042015",
             M_Stage = "Derived_AJCC_M_6th_ed_20042015",
@@ -40,10 +42,11 @@ ovary.tib = rename(ovary.tib,
             DiagAge = "Age_at_diagnosis",
             CutoffStatus = "Vital_status_recode_study_cutoff_used",
             DiagMonth = "Month_of_diagnosis_recode",
-            FollowMonth = "Month_of_followup_recode",
-            FollowYear = "Year_of_followup_recode",
             CutoffStatus2 = "End_Calc_Vital_Status_Adjusted",
             MonthsFollowed = "Number_of_Intervals_Calculated")
+
+#Remove columns
+ovary.tib = select(ovary.tib, -c(Summary_stage_2000_1998, Sex, County, CutoffStatus2, Begin_Calc_Age_Adjusted))
 
 #Change Grades to numeric values
 ovary.tib$Grade <- ifelse(ovary.tib$Grade == "Poorly differentiated; Grade III", 3,

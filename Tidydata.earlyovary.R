@@ -3,9 +3,11 @@ library(SEER2R)
 library(zoo)
 library(survival)
 library(survminer)
+library(kableExtra)
+library(RColorBrewer)
 
-#Read SEER case files for ovarian cancer from 2004-2015 into data.frame
-ovary.df <- read.SeerStat("ovcase_2004-2015.dic", UseVarLabelsInData = TRUE)
+#Read SEER case files for ovarian cancer from 2004-2016 into data.frame
+ovary.df <- read.SeerStat("ovcase_2004-2016.dic", UseVarLabelsInData = TRUE)
 
 #Change data.frame to tibble
 ovary.tib <- as_tibble(ovary.df)
@@ -15,6 +17,8 @@ ovary.tib = rename(ovary.tib,
             Race = "Race_and_origin_recode_NHW_NHB_NHAIAN_NHAPI_Hispanic",
             Histo = "Histologic_Type_ICDO3",
             Lat = "Laterality",
+            Summ_Stage = "SEER_Combined_Summary_Stage_2000_2004",
+            Stage_Group = "Derived_AJCC_Stage_Group_6th_ed_20042015",
             T_Stage = "Derived_AJCC_T_6th_ed_20042015",
             N_Stage = "Derived_AJCC_N_6th_ed_20042015",
             M_Stage = "Derived_AJCC_M_6th_ed_20042015",
@@ -27,10 +31,11 @@ ovary.tib = rename(ovary.tib,
             DiagAge = "Age_at_diagnosis",
             CutoffStatus = "Vital_status_recode_study_cutoff_used",
             DiagMonth = "Month_of_diagnosis_recode",
-            FollowMonth = "Month_of_followup_recode",
-            FollowYear = "Year_of_followup_recode",
             CutoffStatus2 = "End_Calc_Vital_Status_Adjusted",
             MonthsFollowed = "Number_of_Intervals_Calculated")
+
+#Remove columns
+ovary.tib = select(ovary.tib, -c(Summary_stage_2000_1998, Sex, County, CutoffStatus2, Begin_Calc_Age_Adjusted))
 
 #Change Grades to numeric values
 ovary.tib$Grade <- ifelse(ovary.tib$Grade == "Poorly differentiated; Grade III", 3,
@@ -57,17 +62,6 @@ ovary.tib$Nodes_Ex <- ifelse(ovary.tib$Nodes_Ex == 0, "None",
 #Change Nodes_Pos to Yes/No
 ovary.tib$Nodes_Pos <- ifelse(ovary.tib$Nodes_Pos == 0, "No",
                     ifelse(ovary.tib$Nodes_Pos == 98, "Unk", "Yes"))
-
-#Combine Diagnosis Month and Diagnosis Year to Date and Follow-up Month/year to Date
-ovary.tib = ovary.tib %>% 
-        unite(DiagDate, c(DiagYear, DiagMonth), sep = "-")
-
-ovary.tib$DiagDate <- as.yearmon(ovary.tib$DiagDate, format = "%Y-%B")
-
-ovary.tib = ovary.tib %>% 
-        unite(FollowDate, c(FollowYear, FollowMonth), sep = "-")
-
-ovary.tib$FollowDate <- as.yearmon(ovary.tib$FollowDate, format = "%Y-%B")
 
 #Change COD variable to Alive(0) or Dead(1)
 ovary.tib$COD <- ifelse(ovary.tib$COD == "Alive or dead of other cause", 0, 1)
