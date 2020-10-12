@@ -67,7 +67,7 @@ ovary.tib$Nodes_Pos <- ifelse(ovary.tib$Nodes_Pos == 0, "No",
 ovary.tib$COD <- ifelse(ovary.tib$COD == "Alive or dead of other cause", 0, 1)
 
 #Filter out HGSOC and add column for black race and age groups
-serous <- filter(ovary.tib, Histo == "441" | Histo == "460" | Histo == "461" )
+serous <- filter(ovary.tib, Histo == "8441" | Histo == "8460" | Histo == "8461" )
 HGS <- filter(serous, Grade == 3 | Grade == 4)
 HGS = mutate(HGS, Black.Race = ifelse(HGS$Race == "Black", "yes", "no") )
 HGS$Age.Group <- cut(HGS$DiagAge, breaks = c(18, 30, 40, 50, 60 ,70, 80, 120), labels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"), right = FALSE )
