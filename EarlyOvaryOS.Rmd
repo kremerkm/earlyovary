@@ -3,8 +3,8 @@ title: "Survival Outcomes of Early-Stage High Grade Serous Ovarian Cancer Using 
 author: "Kevin Kremer"
 date: "10/9/2020"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -113,7 +113,7 @@ pairwise_survdiff(Surv(SurvMonths, COD) ~ TNM.Stage, HGS, rho = 0)
 
 ```{r, echo=FALSE}
 fit.byStageGroup <- survfit(Surv(SurvMonths, COD) ~ Stage_Group_Summ, data = HGS.SG)
-ggsurvplot_facet(fit.byStageGroup, HGS.SG, facet.by = "Chemo", xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival Stratified by Stage Group", legend.labs = c("I", "III", "IV"), legend.title = "Stage", legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+ggsurvplot_facet(fit.byStageGroup, HGS.SG, facet.by = "Chemo", xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival Stratified by AJCC Stage Group", legend.labs = c("I", "III", "IV"), legend.title = "Stage Group", legend = "bottom", palette = "Set1", ggtheme = theme_gray())
 pairwise_survdiff(Surv(SurvMonths, COD) ~ Stage_Group_Summ, HGS.SG, rho = 0)
 ```
 
