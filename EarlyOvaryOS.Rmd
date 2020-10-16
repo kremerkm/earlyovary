@@ -3,8 +3,8 @@ title: "Survival Outcomes of Early-Stage High Grade Serous Ovarian Cancer Using 
 author: "Kevin Kremer"
 date: "`r format(Sys.time(), '%m/%d/%y')`"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}

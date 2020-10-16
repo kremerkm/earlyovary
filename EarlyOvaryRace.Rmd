@@ -3,8 +3,8 @@ title: "Outcome Inequalty by Race in Early Stage High Grade Serous Ovarian Cance
 author: "Kevin Kremer"
 date: "`r format(Sys.time(), '%m/%d/%y')`"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
