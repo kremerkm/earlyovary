@@ -3,8 +3,8 @@ title: "Outcome Inequalty by Race in Early Stage High Grade Serous Ovarian Cance
 author: "Kevin Kremer"
 date: "`r format(Sys.time(), '%m/%d/%y')`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -82,7 +82,8 @@ serous <- filter(ovary.tib, Histo == "8441" | Histo == "8460" | Histo == "8461" 
 HGS <- filter(serous, Grade == 3 | Grade == 4)
 HGS = mutate(HGS, Black.Race = ifelse(HGS$Race == "Black", "yes", "no") )
 HGS = mutate(HGS, Race.Group = ifelse(HGS$Race == "Black", "Black",
-                                      ifelse(HGS$Race == "White", "White","Other")))
+                                      ifelse(HGS$Race == "White", "White",
+                                             ifelse(HGS$Race == "Hisp", "Hisp", "Other"))))
 HGS = mutate(HGS, TNM.Stage = ifelse(Nodes_Pos == "No" & M_Stage == "M0", "T1N0M0",
                                      ifelse(Nodes_Pos == "Unk" & M_Stage == "M0", "T1NxM0",
                                             ifelse(Nodes_Pos == "Yes" & M_Stage == "M0", "T1N1M0", "Any M1"))))
@@ -303,4 +304,18 @@ kbl(HGS.Hisp.Nx.Chemotbl, col.names = c("Chemotherapy received", "Count")) %>%
 ph.Hisp.Nx <- coxph(Surv(SurvMonths, COD) ~ Chemo, HGS.Hisp.Nx)
 ggforest(ph.Hisp.Nx, HGS.Hisp.Nx)
 summary(ph.Hisp.Nx)
+```
+
+# Overall CoxPH and Forest plot
+
+```{r, echo = FALSE}
+HGS.ES.forest <- rename(HGS.ES,
++ Stage = TNM.Stage,
++ Laterality = Lat,
++ Chemotherapy = Chemo,
++ `Race Group` = Race.Group,
++ Lymphadenectomy = Nodes_Ex)
+HGS.ES.forest$`Race Group` <- factor(HGS.ES.forest$`Race Group`, levels = c('White', 'Hisp', 'Black', 'Other'))
+ph.ES.forest <- coxph(Surv(SurvMonths, COD) ~ Stage + Laterality + Chemotherapy + `Race Group` + Lymphadenectomy, data = HGS.ES.forest)
+summary(ph.ES.forest)
 ```

@@ -82,7 +82,8 @@ serous <- filter(ovary.tib, Histo == "8441" | Histo == "8460" | Histo == "8461" 
 HGS <- filter(serous, Grade == 3 | Grade == 4)
 HGS = mutate(HGS, Black.Race = ifelse(HGS$Race == "Black", "yes", "no") )
 HGS = mutate(HGS, Race.Group = ifelse(HGS$Race == "Black", "Black",
-                                      ifelse(HGS$Race == "White", "White","Other")))
+                                      ifelse(HGS$Race == "White", "White",
+                                             ifelse(HGS$Race == "Hisp", "Hisp", "Other"))))
 HGS = mutate(HGS, TNM.Stage = ifelse(Nodes_Pos == "No" & M_Stage == "M0", "T1N0M0",
                                      ifelse(Nodes_Pos == "Unk" & M_Stage == "M0", "T1NxM0",
                                             ifelse(Nodes_Pos == "Yes" & M_Stage == "M0", "T1N1M0", "Any M1"))))
@@ -131,6 +132,19 @@ kbl(HGS.ES.byLNDtbl, col.names = c("Lymphadenectomy", "Count")) %>%
 ph.byLND <- coxph(Surv(SurvMonths, COD) ~ Nodes_Ex, HGS.ES)
 ggforest(ph.byLND, HGS.ES)
 summary(ph.byLND)
+```
+
+## Facet by chemotherapy
+
+```{r, echo=FALSE}
+fit.byLND <- survfit(Surv(SurvMonths, COD) ~ Nodes_Ex, data = HGS.ES)
+ggsurvplot_facet(fit.byLND, HGS.ES, facet.by = "Chemo", xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival of presumed early-stage HGSOC stratified \nby lymph node dissection", legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"), palette = "Set1", ggtheme = theme_gray())
+pairwise_survdiff(Surv(SurvMonths, COD) ~ Nodes_Ex + Chemo, HGS.ES)
+```
+```{r, echo = FALSE}
+ph.byLND.chemo <- coxph(Surv(SurvMonths, COD) ~ Nodes_Ex + Chemo, HGS.ES)
+ggforest(ph.byLND.chemo, HGS.ES)
+summary(ph.byLND.chemo)
 ```
 
 # In patient's without LND, does adding chemo change their survival?
