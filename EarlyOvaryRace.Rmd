@@ -33,7 +33,7 @@ ovary.tib = rename(ovary.tib,
             T_Stage = "Derived_AJCC_T_6th_ed_20042015",
             N_Stage = "Derived_AJCC_N_6th_ed_20042015",
             M_Stage = "Derived_AJCC_M_6th_ed_20042015",
-            Nodes_Ex = "Regional_nodes_examined_1988",
+            LND = "Regional_nodes_examined_1988",
             Nodes_Pos = "Regional_nodes_positive_1988",
             Chemo = "Chemotherapy_recode_yes_no/unk",
             DiagYear = "Year_of_diagnosis",
@@ -55,20 +55,20 @@ ovary.tib$Grade <- ifelse(ovary.tib$Grade == "Poorly differentiated; Grade III",
         ifelse(ovary.tib$Grade == "Undifferentiated; anaplastic; Grade IV", 4, "Unk"))))
 
 #Change Lat to Right/Left/Bil
-ovary.tib$Lat <- ifelse(ovary.tib$Lat == "Right - origin of primary", "R",
-        ifelse(ovary.tib$Lat == "Left - origin of primary", "L", 
-        ifelse(ovary.tib$Lat == "Bilateral, single primary", "Bil", "Unk")))
+ovary.tib$Lat <- ifelse(ovary.tib$Lat == "Right - origin of primary", "Right",
+        ifelse(ovary.tib$Lat == "Left - origin of primary", "Left", 
+        ifelse(ovary.tib$Lat == "Bilateral, single primary", "Bilateral", "Unknown")))
 
 #Change Race to manageable names
-ovary.tib$Race <- ifelse(ovary.tib$Race == "Hispanic (All Races)", "Hisp",
+ovary.tib$Race <- ifelse(ovary.tib$Race == "Hispanic (All Races)", "Hispanic",
         ifelse(ovary.tib$Race == "Non-Hispanic Asian or Pacific Islander", "API",
         ifelse(ovary.tib$Race == "Non-Hispanic American Indian/Alaska Native", "Native",
         ifelse(ovary.tib$Race == "Non-Hispanic Black", "Black",
         ifelse(ovary.tib$Race == "Non-Hispanic White", "White", "Unk")))))
 
 #Change Nodes_Ex to None, Inadequate, Adequate
-ovary.tib$Nodes_Ex <- ifelse(ovary.tib$Nodes_Ex == 0, "None",
-        ifelse(ovary.tib$Nodes_Ex > 0 & ovary.tib$Nodes_Ex < 10, "Inadequate", "Adequate"))
+ovary.tib$LND <- ifelse(ovary.tib$LND == 0, "None",
+        ifelse(ovary.tib$LND > 0 & ovary.tib$LND < 10, "Inadequate", "Adequate"))
 
 #Change Nodes_Pos to Yes/No
 ovary.tib$Nodes_Pos <- ifelse(ovary.tib$Nodes_Pos == 0, "No",
@@ -83,7 +83,7 @@ HGS <- filter(serous, Grade == 3 | Grade == 4)
 HGS = mutate(HGS, Black.Race = ifelse(HGS$Race == "Black", "yes", "no") )
 HGS = mutate(HGS, Race.Group = ifelse(HGS$Race == "Black", "Black",
                                       ifelse(HGS$Race == "White", "White",
-                                             ifelse(HGS$Race == "Hisp", "Hisp", "Other"))))
+                                             ifelse(HGS$Race == "Hispanic", "Hispanic", "Other"))))
 HGS = mutate(HGS, TNM.Stage = ifelse(Nodes_Pos == "No" & M_Stage == "M0", "T1N0M0",
                                      ifelse(Nodes_Pos == "Unk" & M_Stage == "M0", "T1NxM0",
                                             ifelse(Nodes_Pos == "Yes" & M_Stage == "M0", "T1N1M0", "Any M1"))))
@@ -97,7 +97,7 @@ HGS.Nx <- filter (HGS.ES, Nodes_Pos == "Unk")
 HGS.late <- filter (HGS, Nodes_Pos == "Yes" & M_Stage == "M0")
 HGS.mets <- filter(HGS, M_Stage == "M1")
 HGS.WB <- filter(HGS.ES, HGS.ES$Race == "Black" | HGS.ES$Race == "White")
-HGS.HB <- filter(HGS.ES, HGS.ES$Race == "Black" | HGS.ES$Race == "Hisp")
+HGS.HB <- filter(HGS.ES, HGS.ES$Race == "Black" | HGS.ES$Race == "Hispanic")
 HGS.loc <- filter(HGS, Summ_Stage == "Localized only" & Nodes_Pos != "Yes")
 HGS.SG <- filter(HGS, Stage_Group_Summ != "Unk")
 ```
@@ -105,9 +105,9 @@ HGS.SG <- filter(HGS, Stage_Group_Summ != "Unk")
 # Survival of early-stage HGSOC by race
 
 ```{r, echo = FALSE}
-HGS.ES$Race <- factor(HGS.ES$Race, levels = c('White', 'Black', 'Hisp', 'API', 'Native'))
+HGS.ES$Race <- factor(HGS.ES$Race, levels = c('White', 'Black', 'Hispanic', 'API', 'Native'))
 fit.byRace <- survfit(Surv(SurvMonths, COD) ~ Race, HGS.ES)
-ggsurvplot(fit.byRace, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("White", "Black", "Any Hispanic", "Asian/Pacific Islander", "Native American"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+ggsurvplot(fit.byRace, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("White", "Black", "Hispanic", "Asian/Pacific Islander", "Native American"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
 pairwise_survdiff(Surv(SurvMonths, COD) ~ Race, HGS.ES, rho = 0)
 HGS.ES.Racetbl <- table(HGS.ES$Race)
 kbl(HGS.ES.Racetbl, col.names = c("Race", "Count")) %>% 
@@ -148,9 +148,9 @@ summary(ph.WB)
 # Comparing Black Race to Hispanic Race
 
 ```{r, echo = FALSE}
-HGS.HB$Race <- factor(HGS.HB$Race, levels = c('Hisp', 'Black'))
+HGS.HB$Race <- factor(HGS.HB$Race, levels = c('Hispanic', 'Black'))
 fit.byHB <- survfit(Surv(SurvMonths, COD) ~ Race, HGS.HB)
-ggsurvplot(fit.byHB, HGS.HB, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("Any Hispanic", "Black"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+ggsurvplot(fit.byHB, HGS.HB, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("Hispanic", "Black"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
 HGS.ES.HBtbl <- table(HGS.HB$Race)
 kbl(HGS.ES.HBtbl, col.names = c("Race", "Count")) %>% 
         kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
@@ -198,7 +198,7 @@ summary(ph.White.Chemo)
 ## Hispanic Race
 
 ```{r, echo = FALSE}
-HGS.ES.Hisp.Chemo = filter(HGS.ES, Race == "Hisp" & Chemo == "Yes")
+HGS.ES.Hisp.Chemo = filter(HGS.ES, Race == "Hispanic" & Chemo == "Yes")
 fit.Hisp.Chemo = survfit(Surv(SurvMonths, COD) ~ Nodes_Pos, HGS.ES.Hisp.Chemo)
 ggsurvplot(fit.Hisp.Chemo, HGS.ES.Hisp.Chemo, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Stage", title = "Survival of Hispanic early stage HGSOC patients that \nreceived chemotherapy stratified by Stage", legend.labs = c("T1N0M0", "T1NxM0"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
 HGS.ES.Hisp.Chemotbl <- table(HGS.ES.Hisp.Chemo$Nodes_Pos)
@@ -278,7 +278,7 @@ summary(ph.White.Nx)
 ## Hispanic
 
 ```{r, echo = FALSE}
-HGS.Hisp.N0 <- filter(HGS.ES, HGS.ES$Race == "Hisp" & HGS.ES$Nodes_Pos == "No")
+HGS.Hisp.N0 <- filter(HGS.ES, HGS.ES$Race == "Hispanic" & HGS.ES$Nodes_Pos == "No")
 fit.Hisp.N0.byChemo = survfit(Surv(SurvMonths, COD) ~ Chemo, HGS.Hisp.N0)
 ggsurvplot(fit.Hisp.N0.byChemo, HGS.Hisp.N0, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Chemotherapy received", title = "Survival of Hispanic T1N0M0 patients stratified \nby receipt of chemotherapy", legend.labs = c("No/Unknown", "Yes"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
 HGS.Hisp.N0.Chemotbl <- table(HGS.Hisp.N0$Chemo)
@@ -293,7 +293,7 @@ summary(ph.Hisp.N0)
 
 
 ```{r, echo = FALSE}
-HGS.Hisp.Nx <- filter(HGS.ES, HGS.ES$Race == "Hisp" & HGS.ES$Nodes_Pos == "Unk")
+HGS.Hisp.Nx <- filter(HGS.ES, HGS.ES$Race == "Hispanic" & HGS.ES$Nodes_Pos == "Unk")
 fit.Hisp.Nx.byChemo = survfit(Surv(SurvMonths, COD) ~ Chemo, HGS.Hisp.Nx)
 ggsurvplot(fit.Hisp.Nx.byChemo, HGS.Hisp.Nx, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Chemotherapy received", title = "Survival of Hispanic T1NxM0 patients stratified \nby receipt of chemotherapy", legend.labs = c("No/Unknown", "Yes"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
 HGS.Hisp.Nx.Chemotbl <- table(HGS.Hisp.Nx$Chemo)
@@ -309,13 +309,8 @@ summary(ph.Hisp.Nx)
 # Overall CoxPH and Forest plot
 
 ```{r, echo = FALSE}
-HGS.ES.forest <- rename(HGS.ES,
-+ Stage = TNM.Stage,
-+ Laterality = Lat,
-+ Chemotherapy = Chemo,
-+ `Race Group` = Race.Group,
-+ Lymphadenectomy = Nodes_Ex)
-HGS.ES.forest$`Race Group` <- factor(HGS.ES.forest$`Race Group`, levels = c('White', 'Hisp', 'Black', 'Other'))
-ph.ES.forest <- coxph(Surv(SurvMonths, COD) ~ Stage + Laterality + Chemotherapy + `Race Group` + Lymphadenectomy, data = HGS.ES.forest)
-summary(ph.ES.forest)
+HGS.ES$Race.Group <- factor(HGS.ES$Race.Group, levels = c('White', 'Hispanic', 'Black', 'Other'))
+ph.ES <- coxph(Surv(SurvMonths, COD) ~ TNM.Stage + Lat + Chemo + Race.Group + LND, data = HGS.ES)
+ggforest(ph.ES, HGS.ES)
+summary(ph.ES)
 ```

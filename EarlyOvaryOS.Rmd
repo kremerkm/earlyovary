@@ -33,7 +33,7 @@ ovary.tib = rename(ovary.tib,
             T_Stage = "Derived_AJCC_T_6th_ed_20042015",
             N_Stage = "Derived_AJCC_N_6th_ed_20042015",
             M_Stage = "Derived_AJCC_M_6th_ed_20042015",
-            Nodes_Ex = "Regional_nodes_examined_1988",
+            LND = "Regional_nodes_examined_1988",
             Nodes_Pos = "Regional_nodes_positive_1988",
             Chemo = "Chemotherapy_recode_yes_no/unk",
             DiagYear = "Year_of_diagnosis",
@@ -55,20 +55,20 @@ ovary.tib$Grade <- ifelse(ovary.tib$Grade == "Poorly differentiated; Grade III",
         ifelse(ovary.tib$Grade == "Undifferentiated; anaplastic; Grade IV", 4, "Unk"))))
 
 #Change Lat to Right/Left/Bil
-ovary.tib$Lat <- ifelse(ovary.tib$Lat == "Right - origin of primary", "R",
-        ifelse(ovary.tib$Lat == "Left - origin of primary", "L", 
-        ifelse(ovary.tib$Lat == "Bilateral, single primary", "Bil", "Unk")))
+ovary.tib$Lat <- ifelse(ovary.tib$Lat == "Right - origin of primary", "Right",
+        ifelse(ovary.tib$Lat == "Left - origin of primary", "Left", 
+        ifelse(ovary.tib$Lat == "Bilateral, single primary", "Bilateral", "Unknown")))
 
 #Change Race to manageable names
-ovary.tib$Race <- ifelse(ovary.tib$Race == "Hispanic (All Races)", "Hisp",
+ovary.tib$Race <- ifelse(ovary.tib$Race == "Hispanic (All Races)", "Hispanic",
         ifelse(ovary.tib$Race == "Non-Hispanic Asian or Pacific Islander", "API",
         ifelse(ovary.tib$Race == "Non-Hispanic American Indian/Alaska Native", "Native",
         ifelse(ovary.tib$Race == "Non-Hispanic Black", "Black",
         ifelse(ovary.tib$Race == "Non-Hispanic White", "White", "Unk")))))
 
 #Change Nodes_Ex to None, Inadequate, Adequate
-ovary.tib$Nodes_Ex <- ifelse(ovary.tib$Nodes_Ex == 0, "None",
-        ifelse(ovary.tib$Nodes_Ex > 0 & ovary.tib$Nodes_Ex < 10, "Inadequate", "Adequate"))
+ovary.tib$LND <- ifelse(ovary.tib$LND == 0, "None",
+        ifelse(ovary.tib$LND > 0 & ovary.tib$LND < 10, "Inadequate", "Adequate"))
 
 #Change Nodes_Pos to Yes/No
 ovary.tib$Nodes_Pos <- ifelse(ovary.tib$Nodes_Pos == 0, "No",
@@ -83,7 +83,7 @@ HGS <- filter(serous, Grade == 3 | Grade == 4)
 HGS = mutate(HGS, Black.Race = ifelse(HGS$Race == "Black", "yes", "no") )
 HGS = mutate(HGS, Race.Group = ifelse(HGS$Race == "Black", "Black",
                                       ifelse(HGS$Race == "White", "White",
-                                             ifelse(HGS$Race == "Hisp", "Hisp", "Other"))))
+                                             ifelse(HGS$Race == "Hispanic", "Hispanic", "Other"))))
 HGS = mutate(HGS, TNM.Stage = ifelse(Nodes_Pos == "No" & M_Stage == "M0", "T1N0M0",
                                      ifelse(Nodes_Pos == "Unk" & M_Stage == "M0", "T1NxM0",
                                             ifelse(Nodes_Pos == "Yes" & M_Stage == "M0", "T1N1M0", "Any M1"))))
@@ -121,15 +121,15 @@ pairwise_survdiff(Surv(SurvMonths, COD) ~ Stage_Group_Summ, HGS.SG, rho = 0)
 # For presumed early-stage HGSOC, does adequacy of LN evaluation matter?
 
 ```{r, echo=FALSE}
-fit.byLND <- survfit(Surv(SurvMonths, COD) ~ Nodes_Ex, data = HGS.ES)
+fit.byLND <- survfit(Surv(SurvMonths, COD) ~ LND, data = HGS.ES)
 ggsurvplot(fit.byLND, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival of presumed early-stage HGSOC stratified \nby lymph node dissection", legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"), palette = "Set1", ggtheme = theme_gray())
-pairwise_survdiff(Surv(SurvMonths, COD) ~ Nodes_Ex, HGS.ES, rho = 0)
-HGS.ES.byLNDtbl <- table(HGS.ES$Nodes_Ex)
+pairwise_survdiff(Surv(SurvMonths, COD) ~ LND, HGS.ES, rho = 0)
+HGS.ES.byLNDtbl <- table(HGS.ES$LND)
 kbl(HGS.ES.byLNDtbl, col.names = c("Lymphadenectomy", "Count")) %>% 
         kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 ```
 ```{r, echo = FALSE}
-ph.byLND <- coxph(Surv(SurvMonths, COD) ~ Nodes_Ex, HGS.ES)
+ph.byLND <- coxph(Surv(SurvMonths, COD) ~ LND, HGS.ES)
 ggforest(ph.byLND, HGS.ES)
 summary(ph.byLND)
 ```
@@ -137,12 +137,12 @@ summary(ph.byLND)
 ## Facet by chemotherapy
 
 ```{r, echo=FALSE}
-fit.byLND <- survfit(Surv(SurvMonths, COD) ~ Nodes_Ex, data = HGS.ES)
+fit.byLND <- survfit(Surv(SurvMonths, COD) ~ LND, data = HGS.ES)
 ggsurvplot_facet(fit.byLND, HGS.ES, facet.by = "Chemo", xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival of presumed early-stage HGSOC stratified \nby lymph node dissection", legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"), palette = "Set1", ggtheme = theme_gray())
-pairwise_survdiff(Surv(SurvMonths, COD) ~ Nodes_Ex + Chemo, HGS.ES)
+pairwise_survdiff(Surv(SurvMonths, COD) ~ LND + Chemo, HGS.ES)
 ```
 ```{r, echo = FALSE}
-ph.byLND.chemo <- coxph(Surv(SurvMonths, COD) ~ Nodes_Ex + Chemo, HGS.ES)
+ph.byLND.chemo <- coxph(Surv(SurvMonths, COD) ~ LND + Chemo, HGS.ES)
 ggforest(ph.byLND.chemo, HGS.ES)
 summary(ph.byLND.chemo)
 ```
