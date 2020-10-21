@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(SEER2R)
 library(zoo)
+library(prodlim)
 library(survival)
 library(survminer)
 library(kableExtra)
@@ -313,4 +314,12 @@ HGS.ES$Race.Group <- factor(HGS.ES$Race.Group, levels = c('White', 'Hispanic', '
 ph.ES <- coxph(Surv(SurvMonths, COD) ~ TNM.Stage + Lat + Chemo + Race.Group + LND, data = HGS.ES)
 ggforest(ph.ES, HGS.ES)
 summary(ph.ES)
+```
+```{r, echo = FALSE}
+res.ES <- cox.zph(ph.ES, terms = TRUE)
+res.ES
+
+res.ES.N0
+
+ggcoxzph(res.ES)
 ```

@@ -3,8 +3,8 @@ title: "Survival Outcomes of Early-Stage High Grade Serous Ovarian Cancer Using 
 author: "Kevin Kremer"
 date: "`r format(Sys.time(), '%m/%d/%y')`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -12,10 +12,12 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(SEER2R)
 library(zoo)
+library(prodlim)
 library(survival)
 library(survminer)
 library(kableExtra)
 library(RColorBrewer)
+
 
 #Read SEER case files for ovarian cancer from 2004-2016 into data.frame
 ovary.df <- read.SeerStat("ovcase_2004-2016.dic", UseVarLabelsInData = TRUE)
@@ -109,6 +111,15 @@ fit.byStage <- survfit(Surv(SurvMonths, COD) ~ TNM.Stage, data = HGS)
 ggsurvplot(fit.byStage, data = HGS, test.for.trend = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival Stratified by TNM Stage", legend.labs = c("T1N0M0", "T1NxM0", "T1N1M0", "Any M1"), legend.title = "Stage", legend = "bottom", palette = "Set1", ggtheme = theme_gray())
 pairwise_survdiff(Surv(SurvMonths, COD) ~ TNM.Stage, HGS, rho = 0)
 ```
+# OS for all early stage, HGSOC
+
+```{r, echo = FALSE}
+fit.ES <- survfit(Surv(SurvMonths, COD) ~ 1, HGS.ES)
+ggsurvplot(fit.ES, HGS.ES)
+summary(fit.ES, times = 60)
+summary(fit.ES, times = 120)
+quantile(prodlim(Hist(SurvMonths, COD) ~ 1, HGS.ES, reverse = TRUE))
+```
 
 ## OS based on Stage group with and without chemotherapy
 
@@ -127,6 +138,8 @@ pairwise_survdiff(Surv(SurvMonths, COD) ~ LND, HGS.ES, rho = 0)
 HGS.ES.byLNDtbl <- table(HGS.ES$LND)
 kbl(HGS.ES.byLNDtbl, col.names = c("Lymphadenectomy", "Count")) %>% 
         kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+summary(fit.byLND, times = 60)
+summary(fit.byLND, times = 120)
 ```
 ```{r, echo = FALSE}
 ph.byLND <- coxph(Surv(SurvMonths, COD) ~ LND, HGS.ES)
@@ -134,16 +147,20 @@ ggforest(ph.byLND, HGS.ES)
 summary(ph.byLND)
 ```
 
-## Facet by chemotherapy
+## LND with and without chemotherapy
 
 ```{r, echo=FALSE}
 fit.byLND <- survfit(Surv(SurvMonths, COD) ~ LND, data = HGS.ES)
-ggsurvplot_facet(fit.byLND, HGS.ES, facet.by = "Chemo", xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival of presumed early-stage HGSOC stratified \nby lymph node dissection", legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"), palette = "Set1", ggtheme = theme_gray())
+fit.byNx <- survfit(Surv(SurvMonths, COD) ~ Nodes_Pos, HGS.ES)
+ggsurvplot(fit.byLND, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival of presumed early-stage HGSOC stratified \nby lymph node dissection", legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"), palette = "Set1", ggtheme = theme_gray())
+ggsurvplot(fit.byNx, HGS.ES)
 pairwise_survdiff(Surv(SurvMonths, COD) ~ LND + Chemo, HGS.ES)
 ```
 ```{r, echo = FALSE}
 ph.byLND.chemo <- coxph(Surv(SurvMonths, COD) ~ LND + Chemo, HGS.ES)
+ph.byNx <-  coxph(Surv(SurvMonths, COD) ~ Nodes_Pos, HGS.ES)
 ggforest(ph.byLND.chemo, HGS.ES)
+ggforest(ph.byNx, HGS.ES)
 summary(ph.byLND.chemo)
 ```
 
@@ -168,10 +185,12 @@ summary(ph.ES.chemo)
 ```{r, echo = FALSE}
 fit.ES.byNChemo <- survfit(Surv(SurvMonths, COD) ~ Nodes_Pos + Chemo, HGS.ES)
 ggsurvplot(fit.ES.byNChemo, HGS.ES, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend = "bottom", legend.title = " ", legend.labs = c("T1N0M0 w/o Chemo", "T1N0M0 w/Chemo", "T1NxM0 w/o Chemo", "T1NxM0 with Chemo"), title = "Survival of presumed early-stage HGSOC with and without chemotherapy", palette = "Set1", ggtheme = theme_gray())
+pairwise_survdiff(Surv(SurvMonths, COD) ~ Nodes_Pos + Chemo, HGS.ES)
 HGS.ES.byNChemotbl <- table(HGS.ES$Nodes_Pos,HGS.ES$Chemo)
 kbl(HGS.ES.byNChemotbl) %>%
       add_header_above(header = c("Positive Nodes" = 1, "Chemotherapy received" = 2)) %>%
         kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+pairwise_survdiff(Surv(SurvMonths, COD) ~ Nodes_Pos + Chemo, HGS.ES)
 ```
 ```{r, echo = FALSE}
 ph.ES.byNchemo <- coxph(Surv(SurvMonths, COD) ~ Nodes_Pos + Chemo, HGS.ES)
@@ -182,9 +201,8 @@ summary(ph.ES.byNchemo)
 # Survival difference between N0 patients with and without chemotherapy
 
 ```{r, echo = FALSE}
-HGS.N0$Chemo <- factor(HGS.N0$Chemo, levels = c('Yes', 'No/Unknown'))
 fit.N0.bychemo <- survfit(Surv(SurvMonths, COD) ~ Chemo, HGS.N0)
-ggsurvplot(fit.N0.bychemo, HGS.N0, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Received Chemotherapy", title = "Survival of T1N0M0 patients stratified \nby receipt of chemotherapy", legend.labs = c("Yes", "No/Unknown"), palette = "Set1", ggtheme = theme_gray())
+ggsurvplot(fit.N0.bychemo, HGS.N0, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Received Chemotherapy", title = "Survival of T1N0M0 patients stratified \nby receipt of chemotherapy", legend.labs = c("No/Unknown", "Yes"), palette = "Set1", ggtheme = theme_gray())
 HGS.N0.chemotbl <- table(HGS.N0$Chemo)
 kbl(HGS.N0.chemotbl, col.names = c("Received Chemotherapy", "Count")) %>% 
         kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
@@ -198,9 +216,8 @@ summary(ph.N0.bychemo)
 # Survival difference between Nx patients with and without chemotherapy
 
 ```{r, echo = FALSE}
-HGS.Nx$Chemo <- factor(HGS.Nx$Chemo, levels = c('Yes', 'No/Unknown'))
 fit.Nx.bychemo <- survfit(Surv(SurvMonths, COD) ~ Chemo, HGS.Nx)
-ggsurvplot(fit.Nx.bychemo, HGS.Nx, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Received Chemotherapy", title = "Survival of T1NxM0 patients stratified \nby receipt of chemotherapy", legend.labs = c("Yes", "No/Unknown"), palette = "Set1", ggtheme = theme_gray())
+ggsurvplot(fit.Nx.bychemo, HGS.Nx, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Received Chemotherapy", title = "Survival of T1NxM0 patients stratified \nby receipt of chemotherapy", legend.labs = c("No/Unknown", "Yes"), palette = "Set1", ggtheme = theme_gray())
 HGS.Nx.chemotbl <- table(HGS.Nx$Chemo)
 kbl(HGS.Nx.chemotbl, col.names = c("Received Chemotherapy", "Count")) %>% 
         kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
