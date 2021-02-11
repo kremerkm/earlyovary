@@ -319,7 +319,5 @@ summary(ph.ES)
 res.ES <- cox.zph(ph.ES, terms = TRUE)
 res.ES
 
-res.ES.N0
-
 ggcoxzph(res.ES)
 ```
