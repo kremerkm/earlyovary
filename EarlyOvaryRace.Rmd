@@ -3,8 +3,8 @@ title: "Outcome Inequalty by Race in Early Stage High Grade Serous Ovarian Cance
 author: "Kevin Kremer"
 date: "`r format(Sys.time(), '%m/%d/%y')`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -311,7 +311,13 @@ summary(ph.Hisp.Nx)
 
 ```{r, echo = FALSE}
 HGS.ES$Race.Group <- factor(HGS.ES$Race.Group, levels = c('White', 'Hispanic', 'Black', 'Other'))
-ph.ES <- coxph(Surv(SurvMonths, COD) ~ TNM.Stage + Lat + Chemo + Race.Group + LND, data = HGS.ES)
+HGS.ES <- within(HGS.ES, {
+  Stage <- HGS.ES$TNM.Stage
+  Laterality <- HGS.ES$Lat
+  Chemotherapy <- HGS.ES$Chemo
+  Race <- HGS.ES$Race.Group
+  Lymphadenectomy <- HGS.ES$LND})
+ph.ES <- coxph(Surv(SurvMonths, COD) ~ Stage + Laterality + Chemotherapy + Race + Lymphadenectomy, data = HGS.ES)
 ggforest(ph.ES, HGS.ES)
 summary(ph.ES)
 ```
@@ -319,5 +325,9 @@ summary(ph.ES)
 res.ES <- cox.zph(ph.ES, terms = TRUE)
 res.ES
 
-ggcoxzph(res.ES)
+ggcoxzph(res.ES[1])
+ggcoxzph(res.ES[2])
+ggcoxzph(res.ES[3])
+ggcoxzph(res.ES[4])
+ggcoxzph(res.ES[5])
 ```
