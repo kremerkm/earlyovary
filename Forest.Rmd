@@ -1,0 +1,113 @@
+---
+title: "Overall Forest"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(SEER2R)
+library(zoo)
+library(prodlim)
+library(survival)
+library(survminer)
+library(kableExtra)
+library(RColorBrewer)
+
+
+#Read SEER case files for ovarian cancer from 2004-2016 into data.frame
+ovary.df <- read.SeerStat("ovcase_2004-2016.dic", UseVarLabelsInData = TRUE)
+
+#Change data.frame to tibble
+ovary.tib <- as_tibble(ovary.df)
+
+#Rename columns
+ovary.tib = rename(ovary.tib,
+            Race = "Race_and_origin_recode_NHW_NHB_NHAIAN_NHAPI_Hispanic",
+            Histo = "Histologic_Type_ICDO3",
+            Lat = "Laterality",
+            Summ_Stage = "SEER_Combined_Summary_Stage_2000_2004",
+            Stage_Group = "Derived_AJCC_Stage_Group_6th_ed_20042015",
+            T_Stage = "Derived_AJCC_T_6th_ed_20042015",
+            N_Stage = "Derived_AJCC_N_6th_ed_20042015",
+            M_Stage = "Derived_AJCC_M_6th_ed_20042015",
+            LND = "Regional_nodes_examined_1988",
+            Nodes_Pos = "Regional_nodes_positive_1988",
+            Chemo = "Chemotherapy_recode_yes_no/unk",
+            DiagYear = "Year_of_diagnosis",
+            SurvMonths = "Survival_months",
+            COD = "SEER_causespecific_death_classification",
+            DiagAge = "Age_at_diagnosis",
+            CutoffStatus = "Vital_status_recode_study_cutoff_used",
+            DiagMonth = "Month_of_diagnosis_recode",
+            CutoffStatus2 = "End_Calc_Vital_Status_Adjusted",
+            MonthsFollowed = "Number_of_Intervals_Calculated")
+
+#Remove columns
+ovary.tib = select(ovary.tib, -c(Summary_stage_2000_1998, Sex, County, CutoffStatus2, Begin_Calc_Age_Adjusted))
+
+#Change Grades to numeric values
+ovary.tib$Grade <- ifelse(ovary.tib$Grade == "Poorly differentiated; Grade III", 3,
+        ifelse(ovary.tib$Grade == "Moderately differentiated; Grade II", 2, 
+        ifelse(ovary.tib$Grade == "Well differentiated; Grade I", 1,
+        ifelse(ovary.tib$Grade == "Undifferentiated; anaplastic; Grade IV", 4, "Unk"))))
+
+#Change Lat to Right/Left/Bil
+ovary.tib$Lat <- ifelse(ovary.tib$Lat == "Right - origin of primary", "Right",
+        ifelse(ovary.tib$Lat == "Left - origin of primary", "Left", 
+        ifelse(ovary.tib$Lat == "Bilateral, single primary", "Bilateral", "Unknown")))
+
+#Change Race to manageable names
+ovary.tib$Race <- ifelse(ovary.tib$Race == "Hispanic (All Races)", "Hispanic",
+        ifelse(ovary.tib$Race == "Non-Hispanic Asian or Pacific Islander", "API",
+        ifelse(ovary.tib$Race == "Non-Hispanic American Indian/Alaska Native", "Native",
+        ifelse(ovary.tib$Race == "Non-Hispanic Black", "Black",
+        ifelse(ovary.tib$Race == "Non-Hispanic White", "White", "Unk")))))
+
+#Change Nodes_Ex to None, Inadequate, Adequate
+ovary.tib$LND <- ifelse(ovary.tib$LND == 0, "None",
+        ifelse(ovary.tib$LND > 0 & ovary.tib$LND < 10, "Inadequate", "Adequate"))
+
+#Change Nodes_Pos to Yes/No
+ovary.tib$Nodes_Pos <- ifelse(ovary.tib$Nodes_Pos == 0, "No",
+                    ifelse(ovary.tib$Nodes_Pos == 98, "Unk", "Yes"))
+
+#Change COD variable to Alive(0) or Dead(1)
+ovary.tib$COD <- ifelse(ovary.tib$COD == "Alive or dead of other cause", 0, 1)
+
+#Filter out HGSOC and add column for race and age groups
+serous <- filter(ovary.tib, Histo == "8441" | Histo == "8460" | Histo == "8461" )
+HGS <- filter(serous, Grade == 3 | Grade == 4)
+HGS = mutate(HGS, Black.Race = ifelse(HGS$Race == "Black", "yes", "no") )
+HGS = mutate(HGS, Race.Group = ifelse(HGS$Race == "Black", "Black",
+                                      ifelse(HGS$Race == "White", "White",
+                                             ifelse(HGS$Race == "Hispanic", "Hispanic", "Other"))))
+HGS = mutate(HGS, TNM.Stage = ifelse(Nodes_Pos == "No" & M_Stage == "M0", "T1N0M0",
+                                     ifelse(Nodes_Pos == "Unk" & M_Stage == "M0", "T1NxM0",
+                                            ifelse(Nodes_Pos == "Yes" & M_Stage == "M0", "T1N1M0", "Any M1"))))
+HGS = mutate(HGS, Stage_Group_Summ = ifelse(Stage_Group == "IA" | Stage_Group == "IB" | Stage_Group == "IC", "I",
+                                            ifelse(Stage_Group == "IIIC", "III",
+                                                   ifelse(Stage_Group == "IV", "IV", "Unk"))))
+HGS$Age.Group <- cut(HGS$DiagAge, breaks = c(18, 30, 40, 50, 60 ,70, 80, 120), labels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"), right = FALSE)
+HGS.ES <- filter(HGS,(Stage_Group == "IA" | Stage_Group == "IB" | Stage_Group == "IC") & Nodes_Pos != "Yes")
+HGS.N0 <- filter(HGS.ES, Nodes_Pos == "No")
+HGS.Nx <- filter (HGS.ES, Nodes_Pos == "Unk")
+HGS.late <- filter (HGS, Nodes_Pos == "Yes" & M_Stage == "M0")
+HGS.mets <- filter(HGS, M_Stage == "M1")
+HGS.White.Black <- filter(HGS.ES, HGS.ES$Race == "Black" | HGS.ES$Race == "White")
+HGS.loc <- filter(HGS, Summ_Stage == "Localized only" & Nodes_Pos != "Yes")
+HGS.SG <- filter(HGS, Stage_Group_Summ != "Unk")
+```
+
+```{r, echo = FALSE}
+HGS.ES$Race.Group <- factor(HGS.ES$Race.Group, levels = c('White', 'Hispanic', 'Black', 'Other'))
+HGS.ES <- within(HGS.ES, {
+  Stage <- HGS.ES$TNM.Stage
+  Laterality <- HGS.ES$Lat
+  Chemotherapy <- HGS.ES$Chemo
+  Race <- HGS.ES$Race.Group
+  Lymphadenectomy <- HGS.ES$LND})
+ph.ES <- coxph(Surv(SurvMonths, COD) ~ Stage + Laterality + Chemotherapy + Race + Lymphadenectomy, data = HGS.ES)
+ggforest(ph.ES, HGS.ES)
+summary(ph.ES)
+```
