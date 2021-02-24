@@ -312,6 +312,8 @@ summary(ph.Hisp.Nx)
 ```{r, echo = FALSE}
 HGS.ES$Race.Group <- factor(HGS.ES$Race.Group, levels = c('White', 'Hispanic', 'Black', 'Other'))
 
+HGS.ES$Age.Group = relevel(HGS.ES$Age.Group, ref = "60-69")
+
 fit.byRace.Group <- survfit(Surv(SurvMonths, COD) ~ Race.Group, HGS.ES)
 ggsurvplot(fit.byRace.Group, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("White", "Hispanic", "Black", "Other"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
 pairwise_survdiff(Surv(SurvMonths, COD) ~ Race.Group, HGS.ES, rho = 0)
@@ -320,13 +322,14 @@ kbl(HGS.ES.Racetbl, col.names = c("Race", "Count")) %>%
         kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 
 HGS.ES<- within(HGS.ES, {
+  Age <- HGS.ES$Age.Group
   Stage <- HGS.ES$TNM.Stage
   Laterality <- HGS.ES$Lat
   Chemotherapy <- HGS.ES$Chemo
   Race <- HGS.ES$Race.Group
   Lymphadenectomy <- HGS.ES$LND})
 
-ph.ES <- coxph(Surv(SurvMonths, COD) ~ Stage + Laterality + Chemotherapy + Race + Lymphadenectomy, data = HGS.ES)
+ph.ES <- coxph(Surv(SurvMonths, COD) ~ Age + Stage + Laterality + Chemotherapy + Race + Lymphadenectomy, data = HGS.ES)
 
 ggforest(ph.ES, HGS.ES)
 summary(ph.ES)
@@ -340,4 +343,5 @@ ggcoxzph(res.ES[2])
 ggcoxzph(res.ES[3])
 ggcoxzph(res.ES[4])
 ggcoxzph(res.ES[5])
+ggcoxzph(res.ES[6])
 ```
