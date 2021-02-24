@@ -315,7 +315,9 @@ HGS.ES$Race.Group <- factor(HGS.ES$Race.Group, levels = c('White', 'Hispanic', '
 HGS.ES$Age.Group = relevel(HGS.ES$Age.Group, ref = "60-69")
 
 fit.byRace.Group <- survfit(Surv(SurvMonths, COD) ~ Race.Group, HGS.ES)
-ggsurvplot(fit.byRace.Group, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("White", "Hispanic", "Black", "Other"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+raceKM <- ggsurvplot(fit.byRace.Group, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("White", "Hispanic", "Black", "Other"), legend = "bottom", palette = "Set1", ggtheme = theme_gray()) 
+print(raceKM)
+ggsave("raceKM.png", width = 7, height = 5, units = c("in"))
 pairwise_survdiff(Surv(SurvMonths, COD) ~ Race.Group, HGS.ES, rho = 0)
 HGS.ES.Racetbl <- table(HGS.ES$Race.Group)
 kbl(HGS.ES.Racetbl, col.names = c("Race", "Count")) %>% 
@@ -331,17 +333,15 @@ HGS.ES<- within(HGS.ES, {
 
 ph.ES <- coxph(Surv(SurvMonths, COD) ~ Age + Stage + Laterality + Chemotherapy + Race + Lymphadenectomy, data = HGS.ES)
 
-ggforest(ph.ES, HGS.ES)
+forest <- ggforest(ph.ES, HGS.ES) %>% 
+  print()
+
+ggsave("forest.png", width = 9, height = 8, units = c("in"))
+
+
 summary(ph.ES)
 ```
 ```{r, echo = FALSE}
 res.ES <- cox.zph(ph.ES, terms = TRUE)
 res.ES
-
-ggcoxzph(res.ES[1])
-ggcoxzph(res.ES[2])
-ggcoxzph(res.ES[3])
-ggcoxzph(res.ES[4])
-ggcoxzph(res.ES[5])
-ggcoxzph(res.ES[6])
 ```
