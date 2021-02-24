@@ -311,13 +311,23 @@ summary(ph.Hisp.Nx)
 
 ```{r, echo = FALSE}
 HGS.ES$Race.Group <- factor(HGS.ES$Race.Group, levels = c('White', 'Hispanic', 'Black', 'Other'))
-HGS.ES <- within(HGS.ES, {
+
+fit.byRace.Group <- survfit(Surv(SurvMonths, COD) ~ Race.Group, HGS.ES)
+ggsurvplot(fit.byRace.Group, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients stratified by Race", legend.labs = c("White", "Hispanic", "Black", "Other"), legend = "bottom", palette = "Set1", ggtheme = theme_gray())
+pairwise_survdiff(Surv(SurvMonths, COD) ~ Race.Group, HGS.ES, rho = 0)
+HGS.ES.Racetbl <- table(HGS.ES$Race.Group)
+kbl(HGS.ES.Racetbl, col.names = c("Race", "Count")) %>% 
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+HGS.ES<- within(HGS.ES, {
   Stage <- HGS.ES$TNM.Stage
   Laterality <- HGS.ES$Lat
   Chemotherapy <- HGS.ES$Chemo
   Race <- HGS.ES$Race.Group
   Lymphadenectomy <- HGS.ES$LND})
+
 ph.ES <- coxph(Surv(SurvMonths, COD) ~ Stage + Laterality + Chemotherapy + Race + Lymphadenectomy, data = HGS.ES)
+
 ggforest(ph.ES, HGS.ES)
 summary(ph.ES)
 ```
