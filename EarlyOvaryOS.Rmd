@@ -97,6 +97,7 @@ HGS = mutate(HGS, Stage_Group_Summ = ifelse(Stage_Group == "IA" | Stage_Group ==
 HGS = mutate(HGS, LND2 = ifelse(LND == "None", "No", "Yes"))
 HGS$Age.Group <- cut(HGS$DiagAge, breaks = c(18, 30, 40, 50, 60 ,70, 80, 120), labels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"), right = FALSE)
 HGS.ES <- filter(HGS,(Stage_Group == "IA" | Stage_Group == "IB" | Stage_Group == "IC") & Nodes_Pos != "Yes")
+HGS.ES$LND <- factor(HGS.ES$LND, levels = c('Adequate', 'Inadequate', 'None'))
 HGS.N0 <- filter(HGS.ES, TNM.Stage == "T1N0M0")
 HGS.Nx <- filter (HGS.ES, TNM.Stage == "T1NxM0")
 HGS.late <- filter (HGS, Nodes_Pos == "Yes" & M_Stage == "M0")
@@ -148,19 +149,20 @@ summary(fit.byLND, times = 120)
 ```{r, echo = FALSE}
 ph.byLND <- coxph(Surv(SurvMonths, COD) ~ LND, HGS.ES)
 ggforest(ph.byLND, HGS.ES)
-tbl_regression(ph.byLND, exp = TRUE)
+#tbl_regression(ph.byLND, exp = TRUE)
 summary(ph.byLND)
 ```
 
 ## LND with and without chemotherapy
 
 ```{r, echo=FALSE}
-fit.byLND.chemo <- survfit(Surv(SurvMonths, COD) ~ LND + Chemo, data = HGS.ES)
-ggsurvplot(fit.byLND.chemo, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival of presumed early-stage HGSOC stratified \nby lymph node dissection and receipt of chemotherapy", legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate, no Chemo", "Adequate with Chemo", "Inadequate, no Chemo", "Inadequate with Chemo", "None, no Chemo", "None with Chemo"), palette = "Set1", ggtheme = theme_gray())
-pairwise_survdiff(Surv(SurvMonths, COD) ~ LND + Chemo, HGS.ES)
+fit.byLND.chemo <- survfit(Surv(SurvMonths, COD) ~ LND, data = HGS.ES.chemo)
+KMbyLND.chemo <- ggsurvplot(fit.byLND.chemo, HGS.ES.chemo, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival of presumed early-stage HGSOC that \nreceived chemotherapy stratified by lymphadenectomy", legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"), palette = "Set1", ggtheme = theme_gray(), pval = TRUE)
+ggsave("KMbyLND.chemo.png", print(KMbyLND.chemo), height = 4, width = 5, units = c("in"))
+pairwise_survdiff(Surv(SurvMonths, COD) ~ LND, HGS.ES.chemo)
 
-ph.byLND.chemo <- coxph(Surv(SurvMonths, COD) ~ LND + Chemo, HGS.ES)
-ggforest(ph.byLND.chemo, HGS.ES)
+ph.byLND.chemo <- coxph(Surv(SurvMonths, COD) ~ LND, HGS.ES.chemo)
+ggforest(ph.byLND.chemo, HGS.ES.chemo)
 summary(ph.byLND.chemo)
 ```
 ```{r, echo = FALSE}
@@ -180,7 +182,7 @@ summary(ph.byLND2.chemo)
 ```{r, echo = FALSE}
 HGS.ES.chemo = filter(HGS.ES, Chemo == "Yes")
 fit.ES.chemo <- survfit(Surv(SurvMonths, COD) ~ TNM.Stage, HGS.ES.chemo)
-KM.ES.chemo <- ggsurvplot(fit.ES.chemo, HGS.ES.chemo, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Stage", legend = "bottom", legend.labs = c("T1N0M0", "T1NxMO"), title = "Survival of presumed early-stage HGSOC \nthat received chemotherapy", palette = "Set1", ggtheme = theme_gray())
+KM.ES.chemo <- ggsurvplot(fit.ES.chemo, HGS.ES.chemo, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Stage", legend = "bottom", legend.labs = c("T1N0M0", "T1NxMO"), title = "Survival of presumed early-stage HGSOC that\nreceived chemotherapy stratified by stage", palette = "Set1", ggtheme = theme_gray())
 ggsave("KM.ES.chemo.png", print(KM.ES.chemo), height = 4, width = 5, units = c("in"))
 HGS.ES.chemotbl <- table(HGS.ES.chemo$TNM.Stage)
 kbl(HGS.ES.chemotbl, col.names = c("Stage", "Count")) %>% 
