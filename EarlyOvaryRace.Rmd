@@ -91,7 +91,7 @@ HGS = mutate(HGS, TNM.Stage = ifelse(Nodes_Pos == "No" & M_Stage == "M0", "T1N0M
 HGS = mutate(HGS, Stage_Group_Summ = ifelse(Stage_Group == "IA" | Stage_Group == "IB" | Stage_Group == "IC", "I",
                                             ifelse(Stage_Group == "IIIC", "III",
                                                    ifelse(Stage_Group == "IV", "IV", "Unk"))))
-HGS$Age.Group <- cut(HGS$DiagAge, breaks = c(18, 30, 40, 50, 60 ,70, 80, 120), labels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"), right = FALSE)
+HGS$Age.Group <- cut(HGS$DiagAge, breaks = c(30, 40, 50, 60 ,70, 80, 120), labels = c("30-39", "40-49", "50-59", "60-69", "70-79", "80+"), right = FALSE)
 HGS.ES <- filter(HGS,(Stage_Group == "IA" | Stage_Group == "IB" | Stage_Group == "IC") & Nodes_Pos != "Yes")
 HGS.N0 <- filter(HGS.ES, Nodes_Pos == "No")
 HGS.Nx <- filter (HGS.ES, Nodes_Pos == "Unk")
@@ -315,7 +315,8 @@ HGS.ES$Race.Group <- factor(HGS.ES$Race.Group, levels = c('White', 'Hispanic', '
 HGS.ES$Age.Group = relevel(HGS.ES$Age.Group, ref = "60-69")
 
 fit.byRace.Group <- survfit(Surv(SurvMonths, COD) ~ Race.Group, HGS.ES)
-raceKM <- ggsurvplot(fit.byRace.Group, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "Survival of early stage HGSOC patients \nstratified by Race", legend.labs = c("White", "Hispanic", "Black", "Other"), legend = "bottom", palette = "Set1", ggtheme = theme_gray(), pval = TRUE) 
+raceKM <- ggsurvplot(fit.byRace.Group, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Race", title = "OS of T1 HGSOC stratified by Race", legend.labs = c("White", "Hispanic", "Black", "Other"), legend = "bottom", palette = "Set1", ggtheme = theme_gray(), pval = TRUE) 
+print(raceKM)
 ggsave("raceKM.png", print(raceKM), width = 5, height = 4, units = c("in"))
 pairwise_survdiff(Surv(SurvMonths, COD) ~ Race.Group, HGS.ES, rho = 0)
 HGS.ES.Racetbl <- table(HGS.ES$Race.Group)
@@ -324,16 +325,17 @@ kbl(HGS.ES.Racetbl, col.names = c("Race", "Count")) %>%
 
 HGS.ES<- within(HGS.ES, {
   Age <- HGS.ES$Age.Group
-  Stage <- HGS.ES$TNM.Stage
   Laterality <- HGS.ES$Lat
   Chemotherapy <- HGS.ES$Chemo
   Race <- HGS.ES$Race.Group
   Lymphadenectomy <- HGS.ES$LND})
 
-ph.ES <- coxph(Surv(SurvMonths, COD) ~ Age + Stage + Laterality + Chemotherapy + Race + Lymphadenectomy, data = HGS.ES)
+ph.ES <- coxph(Surv(SurvMonths, COD) ~ Age + Laterality + Race + Lymphadenectomy, data = HGS.ES)
 
 forest <- ggforest(ph.ES, HGS.ES) %>% 
   print()
+
+print(forest)
 
 ggsave("forest.png", width = 9, height = 8, units = c("in"))
 

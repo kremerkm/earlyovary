@@ -95,7 +95,7 @@ HGS = mutate(HGS, Stage_Group_Summ = ifelse(Stage_Group == "IA" | Stage_Group ==
                                             ifelse(Stage_Group == "IIIC", "III",
                                                    ifelse(Stage_Group == "IV", "IV", "Unk"))))
 HGS = mutate(HGS, LND2 = ifelse(LND == "None", "No", "Yes"))
-HGS$Age.Group <- cut(HGS$DiagAge, breaks = c(18, 30, 40, 50, 60 ,70, 80, 120), labels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"), right = FALSE)
+HGS$Age.Group <- cut(HGS$DiagAge, breaks = c(30, 40, 50, 60 ,70, 80, 120), labels = c("30-39", "40-49", "50-59", "60-69", "70-79", "80+"), right = FALSE)
 HGS.ES <- filter(HGS,(Stage_Group == "IA" | Stage_Group == "IB" | Stage_Group == "IC") & Nodes_Pos != "Yes")
 HGS.ES$LND <- factor(HGS.ES$LND, levels = c('Adequate', 'Inadequate', 'None'))
 HGS.N0 <- filter(HGS.ES, TNM.Stage == "T1N0M0")
@@ -137,8 +137,7 @@ pairwise_survdiff(Surv(SurvMonths, COD) ~ Stage_Group_Summ + Chemo, HGS.SG, rho 
 
 ```{r, echo=FALSE}
 fit.byLND <- survfit(Surv(SurvMonths, COD) ~ LND, data = HGS.ES)
-KMbyLND <- ggsurvplot(fit.byLND, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival of presumed early-stage HGSOC stratified \nby adequacy of lymph node dissection", palette = "Set1", ggtheme = theme_gray(), legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"), pval = TRUE)
-ggsave("KMbyLND.png", print(KMbyLND), height = 4, width = 5, units = c("in"))
+ggsurvplot(fit.byLND, HGS.ES, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "OS of T1 HGSOC stratified by adequacy of lymphadenectomy", palette = "Set1", ggtheme = theme_gray(), legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"), pval = TRUE)
 pairwise_survdiff(Surv(SurvMonths, COD) ~ LND, HGS.ES, rho = 0)
 HGS.ES.byLNDtbl <- table(HGS.ES$LND)
 kbl(HGS.ES.byLNDtbl, col.names = c("Lymphadenectomy", "Count")) %>% 
@@ -156,8 +155,11 @@ summary(ph.byLND)
 ## LND with and without chemotherapy
 
 ```{r, echo=FALSE}
+HGS.ES.chemo = filter(HGS.ES, Chemo == "Yes")
+
 fit.byLND.chemo <- survfit(Surv(SurvMonths, COD) ~ LND, data = HGS.ES.chemo)
-KMbyLND.chemo <- ggsurvplot(fit.byLND.chemo, HGS.ES.chemo, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "Survival of presumed early-stage HGSOC that \nreceived chemotherapy stratified by lymphadenectomy", legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"), palette = "Set1", ggtheme = theme_gray(), pval = TRUE)
+KMbyLND.chemo <- ggsurvplot(fit.byLND.chemo, HGS.ES.chemo, xlab = "Months", break.time.by = 12, break.y.by = 0.1, title = "OS of T1 HGSOC treated with adjuvant chemotherapy \nstratified by adequacy of lymphadenectomy", legend = "bottom", legend.title = "Lymphadenectomy", legend.labs = c("Adequate", "Inadequate", "None"), palette = "Set1", ggtheme = theme_gray(), pval = TRUE)
+print(KMbyLND.chemo)
 ggsave("KMbyLND.chemo.png", print(KMbyLND.chemo), height = 4, width = 5, units = c("in"))
 pairwise_survdiff(Surv(SurvMonths, COD) ~ LND, HGS.ES.chemo)
 
@@ -180,9 +182,9 @@ summary(ph.byLND2.chemo)
 # In patient's without LND, does adding chemo change their survival?
 
 ```{r, echo = FALSE}
-HGS.ES.chemo = filter(HGS.ES, Chemo == "Yes")
 fit.ES.chemo <- survfit(Surv(SurvMonths, COD) ~ TNM.Stage, HGS.ES.chemo)
-KM.ES.chemo <- ggsurvplot(fit.ES.chemo, HGS.ES.chemo, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Stage", legend = "bottom", legend.labs = c("T1N0M0", "T1NxMO"), title = "Survival of presumed early-stage HGSOC that\nreceived chemotherapy stratified by stage", palette = "Set1", ggtheme = theme_gray())
+KM.ES.chemo <- ggsurvplot(fit.ES.chemo, HGS.ES.chemo, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend.title = "Stage", legend = "bottom", legend.labs = c("T1N0M0", "T1NxMO"), title = "OS of staged vs. unstaged T1 HGSOC treated \nwith adjuvant chemotherapy", palette = "Set1", ggtheme = theme_gray())
+print(KM.ES.chemo)
 ggsave("KM.ES.chemo.png", print(KM.ES.chemo), height = 4, width = 5, units = c("in"))
 HGS.ES.chemotbl <- table(HGS.ES.chemo$TNM.Stage)
 kbl(HGS.ES.chemotbl, col.names = c("Stage", "Count")) %>% 
