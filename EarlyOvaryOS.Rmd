@@ -105,6 +105,7 @@ HGS.mets <- filter(HGS, M_Stage == "M1")
 HGS.White.Black <- filter(HGS.ES, HGS.ES$Race == "Black" | HGS.ES$Race == "White")
 HGS.loc <- filter(HGS, Summ_Stage == "Localized only" & Nodes_Pos != "Yes")
 HGS.SG <- filter(HGS, Stage_Group_Summ != "Unk")
+HGS.1a <- filter(HGS, Stage_Group == "IA")
 ```
 
 # OS based on stage
@@ -212,6 +213,24 @@ ggforest(ph.ES.byStage.chemo, HGS.ES)
 summary(ph.ES.byStage.chemo)
 
 ```
+
+## Stage IA stratified by LND and chemotherapy
+
+```{r, echo = FALSE}
+fit.1a <- survfit(Surv(SurvMonths, COD) ~ LND + Chemo, HGS.1a)
+ggsurvplot(fit.1a, HGS.1a, pval = TRUE, xlab = "Months", break.time.by = 12, break.y.by = 0.1, legend = "bottom", legend.title = " ", title = "Survival of Stage IA HGSOC stratified by lymphadnectomy and chemotherapy", palette = "Set1", ggtheme = theme_gray())
+pairwise_survdiff(Surv(SurvMonths, COD) ~ LND + Chemo, HGS.1a)
+HGS.1atbl <- table(HGS.1a$LND,HGS.1a$Chemo)
+kbl(HGS.1atbl) %>%
+      #add_header_above(header = c("Positive Nodes" = 1, "Chemotherapy received" = 2)) %>%
+        kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+ph.1a <- coxph(Surv(SurvMonths, COD) ~ LND + Chemo, HGS.1a)
+ggforest(ph.1a, HGS.1a)
+summary(ph.1a)
+
+```
+
 
 # Survival difference between N0 patients with and without chemotherapy
 
